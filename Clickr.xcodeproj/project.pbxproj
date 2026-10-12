@@ -10,6 +10,7 @@
 		5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C950CC1B98977FF4F0C0895C /* RemotePopover.swift */; };
 		6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */; };
 		8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */; };
+		BD9E386D9EE5FEC1D0A02145 /* RemoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201189B612BC49040F04E5CB /* RemoteViewModel.swift */; };
 		CEB9CCBCE3AC0721441E09C5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38D2A448680F3BC58FF3F9D2 /* Assets.xcassets */; };
 		F66E90FE9610D25A8C7488EA /* CompanionKit in Frameworks */ = {isa = PBXBuildFile; productRef = F361A362F46DB6723D8DEFF0 /* CompanionKit */; };
 /* End PBXBuildFile section */
@@ -17,6 +18,7 @@
 /* Begin PBXFileReference section */
 		0ACF7A1145E9685FF4FE4007 /* CompanionKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CompanionKit; path = Packages/CompanionKit; sourceTree = SOURCE_ROOT; };
 		0B1D752D9195B218840BDCD4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		201189B612BC49040F04E5CB /* RemoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteViewModel.swift; sourceTree = "<group>"; };
 		3755025F2A6E5FC0B7FF07BE /* Clickr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clickr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		38D2A448680F3BC58FF3F9D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIcon.swift; sourceTree = "<group>"; };
@@ -61,6 +63,7 @@
 				510D7D7F0733934161E5F020 /* Clickr.entitlements */,
 				A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */,
 				0B1D752D9195B218840BDCD4 /* Info.plist */,
+				201189B612BC49040F04E5CB /* RemoteViewModel.swift */,
 				FCAE7F61AD4C9D39B3676557 /* Views */,
 			);
 			path = App;
@@ -162,6 +165,7 @@
 				8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */,
 				6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */,
 				5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */,
+				BD9E386D9EE5FEC1D0A02145 /* RemoteViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
