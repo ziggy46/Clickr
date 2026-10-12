@@ -207,6 +207,19 @@ final class RemoteViewModel {
         }
     }
 
+    /// Sleeps the TV, or wakes it if it says it's asleep.
+    func togglePower() {
+        guard let session = selectedSession else { return }
+        let wake = isAsleep
+        Task {
+            do {
+                try await session.setPower(on: wake)
+            } catch {
+                log.error("Power failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
     private func receivedFromTV(_ text: String) {
         syncedText = text
         tvText = text

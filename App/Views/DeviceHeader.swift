@@ -21,8 +21,14 @@ struct DeviceHeader: View {
                 }
             }
             Spacer(minLength: 8)
-            if model.devices.count > 1 {
-                switcher
+            HStack(spacing: 8) {
+                if model.selectedDevice != nil {
+                    PowerButton(model: model)
+                        .disabled(model.connectionState != .connected)
+                }
+                if model.devices.count > 1 {
+                    switcher
+                }
             }
         }
     }

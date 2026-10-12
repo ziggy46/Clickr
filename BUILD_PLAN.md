@@ -308,6 +308,8 @@ Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
   - Opens a menu of discovered Apple TVs.
   - Hidden when only one TV is known.
 
+- **Power button** *(added 2026-10-12 at the owner's request)*: a 36 × 36 circle with `power` at 16 pt semibold, left of the switcher (8 pt apart), same glass style. Shown whenever a TV is selected, enabled only while connected. Hold for 1 s (a white ring fills around it) to put the TV to sleep, or to wake it when the TV reports it's asleep. Sends only the button-up half of HID Sleep (12) / Wake (13), as pyatv does. Accessibility label "Power".
+
 **2. Now playing card** (Milestone 10; hidden until then)
 
 - Padding **10**, radius **18**, glass at white 10% plus a 1 pt white 14% edge. VStack spacing 9.

@@ -262,6 +262,13 @@ public actor AppleTVSession {
         try await press.value
     }
 
+    /// Wakes the TV or puts it to sleep. Like pyatv, this sends only the button-up half of
+    /// the HID Wake (13) or Sleep (12) command.
+    public func setPower(on: Bool) async throws {
+        guard currentState == .connected else { throw SessionError.notConnected }
+        _ = try await request("_hidC", ["_hBtS": 2, "_hidC": on ? 13 : 12])
+    }
+
     private func sendPress(_ button: RemoteButton, hold: Bool) async throws {
         guard currentState == .connected else { throw SessionError.notConnected }
         _ = try await request("_hidC", ["_hBtS": 1, "_hidC": .int(UInt64(button.hidCode))])

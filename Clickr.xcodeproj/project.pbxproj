@@ -18,6 +18,7 @@
 		6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */; };
 		704BB432C7ED4E88B281E06C /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947C7F5A9374B54CA64530A6 /* AppSettings.swift */; };
 		8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */; };
+		9367ED73DB4133F17C8D28B2 /* PowerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10E8ACEE67ADE724EDFCDAD9 /* PowerButton.swift */; };
 		BD9E386D9EE5FEC1D0A02145 /* RemoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201189B612BC49040F04E5CB /* RemoteViewModel.swift */; };
 		C574A441A87994A166C8C670 /* FallbackRemoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B93D5D0F81566F13050D20 /* FallbackRemoteView.swift */; };
 		C80409715EFFDB395E198A68 /* GlassRemoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6864CA5DCB552C6F9799DFF9 /* GlassRemoteView.swift */; };
@@ -33,6 +34,7 @@
 /* Begin PBXFileReference section */
 		0ACF7A1145E9685FF4FE4007 /* CompanionKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CompanionKit; path = Packages/CompanionKit; sourceTree = SOURCE_ROOT; };
 		0B1D752D9195B218840BDCD4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		10E8ACEE67ADE724EDFCDAD9 /* PowerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerButton.swift; sourceTree = "<group>"; };
 		1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalShortcut.swift; sourceTree = "<group>"; };
 		201189B612BC49040F04E5CB /* RemoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteViewModel.swift; sourceTree = "<group>"; };
 		20DDA00246752F5F774922B4 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -133,6 +135,7 @@
 				6864CA5DCB552C6F9799DFF9 /* GlassRemoteView.swift */,
 				437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */,
 				C099EDEF1117201BB9F02E03 /* PairingView.swift */,
+				10E8ACEE67ADE724EDFCDAD9 /* PowerButton.swift */,
 				595E4CEBB721ACB59B92757E /* RemoteContent.swift */,
 				C950CC1B98977FF4F0C0895C /* RemotePopover.swift */,
 			);
@@ -227,6 +230,7 @@
 				57EA90EBB77688D343EDD6A8 /* LaunchAtLogin.swift in Sources */,
 				6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */,
 				07FFFC2CFFE814EDE93246A0 /* PairingView.swift in Sources */,
+				9367ED73DB4133F17C8D28B2 /* PowerButton.swift in Sources */,
 				4E24788F6B9CBABEC7887090 /* PreviewSupport.swift in Sources */,
 				FEC7425432776102FDAFC028 /* RemoteContent.swift in Sources */,
 				5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */,

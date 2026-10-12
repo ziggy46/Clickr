@@ -113,6 +113,18 @@ private func pairedSession() async throws -> (FakeAppleTV, AppleTVSession) {
         await session.disconnect()
     }
 
+    @Test func powerSendsSleepAndWake() async throws {
+        let (tv, session) = try await pairedSession()
+        defer { tv.stop() }
+        await session.connect()
+        #expect(await waitFor(.connected, in: session))
+
+        try await session.setPower(on: false)
+        try await session.setPower(on: true)
+        #expect(tv.snapshot().hid.map { [$0.state, $0.code] } == [[2, 12], [2, 13]])
+        await session.disconnect()
+    }
+
     @Test func pressWithoutConnectionThrows() async {
         let session = AppleTVSession(device: device(at: .hostPort(host: "127.0.0.1", port: 9)), store: InMemoryCredentialStore())
         await #expect(throws: AppleTVSession.SessionError.notConnected) {
