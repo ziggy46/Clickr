@@ -9,6 +9,17 @@ private let identity = AirPlayIdentity(
     deviceID: "02:11:22:33:44:55", macAddress: "02:11:22:33:44:55"
 )
 
+/// Waits for something the session does on its own schedule, such as answering the TV or
+/// posting feedback. CI machines can be slow, so poll with a generous deadline instead of
+/// sleeping a fixed time.
+private func eventually(within limit: Duration = .seconds(15), _ condition: () -> Bool) async throws -> Bool {
+    let deadline = ContinuousClock.now + limit
+    while !condition(), ContinuousClock.now < deadline {
+        try await Task.sleep(for: .milliseconds(50))
+    }
+    return condition()
+}
+
 @Suite(.serialized) struct RemoteControlTests {
     @Test func setsUpTheTunnelAndReceivesNowPlaying() async throws {
         let server = try FakeAirPlayServer()
@@ -28,6 +39,8 @@ private let identity = AirPlayIdentity(
         #expect(playing.appName == "Video")
         #expect(playing.state == .playing)
 
+        // The event channel reply goes out independently of the now playing data.
+        #expect(try await eventually { !server.snapshot().eventReplies.isEmpty })
         let record = server.snapshot()
         #expect(record.methods.prefix(5) == ["POST", "POST", "SETUP", "RECORD", "SETUP"])
         #expect(record.mrpTypes.prefix(4) == [15, 38, 16, 24])
@@ -60,13 +73,8 @@ private let identity = AirPlayIdentity(
         defer { server.stop() }
         let session = AirPlayRemoteControl(endpoint: server.endpoint, credentials: server.clientCredentials, identity: identity)
         try await session.start()
-        // Feedback goes out every 2 s. Poll rather than sleep a fixed time, since CI runners
-        // can be slow enough to miss a tight window.
-        let deadline = ContinuousClock.now + .seconds(15)
-        while server.snapshot().feedbackCount < 2, ContinuousClock.now < deadline {
-            try await Task.sleep(for: .milliseconds(100))
-        }
-        #expect(server.snapshot().feedbackCount >= 2)
+        // Feedback goes out every 2 s.
+        #expect(try await eventually { server.snapshot().feedbackCount >= 2 })
         await session.close()
     }
 
