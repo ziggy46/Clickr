@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		07FFFC2CFFE814EDE93246A0 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C099EDEF1117201BB9F02E03 /* PairingView.swift */; };
+		0DC6AC574BBC447E44B2EA71 /* GlobalShortcut.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */; };
 		20A1CF7C8556BBE62CB89C11 /* KeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA812B5B15FFCA8454605F3 /* KeyboardShortcuts.swift */; };
 		21B7C5D89D842F25B31AB072 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DDA00246752F5F774922B4 /* Theme.swift */; };
 		4E24788F6B9CBABEC7887090 /* PreviewSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2995E5D98A242BF5CFCE0ABC /* PreviewSupport.swift */; };
 		5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C950CC1B98977FF4F0C0895C /* RemotePopover.swift */; };
+		57EA90EBB77688D343EDD6A8 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */; };
 		62E58754EDC2492389D41075 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B56458A94B00FC1C6EAF0D3 /* Controls.swift */; };
 		6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */; };
 		8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */; };
@@ -21,6 +23,7 @@
 		C80FC2E78FBF686CF8B93DCC /* StatusItemMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 663861EB84F76CA3308A3A52 /* StatusItemMenu.swift */; };
 		CEB9CCBCE3AC0721441E09C5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38D2A448680F3BC58FF3F9D2 /* Assets.xcassets */; };
 		E412606497D3FF0D34EC2A08 /* Clickpad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8251B795D2B2FF36347ED28 /* Clickpad.swift */; };
+		F3F433CD8276ADA1D799E251 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84775BEDFDD829EFA4672DDF /* SettingsView.swift */; };
 		F56B2A5EA5C4857F0C2E68FB /* DeviceHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBA38FE8D501BB5E94BD53A /* DeviceHeader.swift */; };
 		F66E90FE9610D25A8C7488EA /* CompanionKit in Frameworks */ = {isa = PBXBuildFile; productRef = F361A362F46DB6723D8DEFF0 /* CompanionKit */; };
 		FEC7425432776102FDAFC028 /* RemoteContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595E4CEBB721ACB59B92757E /* RemoteContent.swift */; };
@@ -29,6 +32,7 @@
 /* Begin PBXFileReference section */
 		0ACF7A1145E9685FF4FE4007 /* CompanionKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CompanionKit; path = Packages/CompanionKit; sourceTree = SOURCE_ROOT; };
 		0B1D752D9195B218840BDCD4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalShortcut.swift; sourceTree = "<group>"; };
 		201189B612BC49040F04E5CB /* RemoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteViewModel.swift; sourceTree = "<group>"; };
 		20DDA00246752F5F774922B4 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		2995E5D98A242BF5CFCE0ABC /* PreviewSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSupport.swift; sourceTree = "<group>"; };
@@ -39,7 +43,9 @@
 		595E4CEBB721ACB59B92757E /* RemoteContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteContent.swift; sourceTree = "<group>"; };
 		663861EB84F76CA3308A3A52 /* StatusItemMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemMenu.swift; sourceTree = "<group>"; };
 		6864CA5DCB552C6F9799DFF9 /* GlassRemoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassRemoteView.swift; sourceTree = "<group>"; };
+		7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
 		7B56458A94B00FC1C6EAF0D3 /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
+		84775BEDFDD829EFA4672DDF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9DBA38FE8D501BB5E94BD53A /* DeviceHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeader.swift; sourceTree = "<group>"; };
 		A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickrApp.swift; sourceTree = "<group>"; };
 		AEA812B5B15FFCA8454605F3 /* KeyboardShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcuts.swift; sourceTree = "<group>"; };
@@ -90,6 +96,7 @@
 				201189B612BC49040F04E5CB /* RemoteViewModel.swift */,
 				663861EB84F76CA3308A3A52 /* StatusItemMenu.swift */,
 				20DDA00246752F5F774922B4 /* Theme.swift */,
+				F8739709890D28C13256D326 /* Settings */,
 				FCAE7F61AD4C9D39B3676557 /* Views */,
 			);
 			path = App;
@@ -101,6 +108,16 @@
 				3755025F2A6E5FC0B7FF07BE /* Clickr.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F8739709890D28C13256D326 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */,
+				7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */,
+				84775BEDFDD829EFA4672DDF /* SettingsView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		FCAE7F61AD4C9D39B3676557 /* Views */ = {
@@ -201,13 +218,16 @@
 				F56B2A5EA5C4857F0C2E68FB /* DeviceHeader.swift in Sources */,
 				C574A441A87994A166C8C670 /* FallbackRemoteView.swift in Sources */,
 				C80409715EFFDB395E198A68 /* GlassRemoteView.swift in Sources */,
+				0DC6AC574BBC447E44B2EA71 /* GlobalShortcut.swift in Sources */,
 				20A1CF7C8556BBE62CB89C11 /* KeyboardShortcuts.swift in Sources */,
+				57EA90EBB77688D343EDD6A8 /* LaunchAtLogin.swift in Sources */,
 				6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */,
 				07FFFC2CFFE814EDE93246A0 /* PairingView.swift in Sources */,
 				4E24788F6B9CBABEC7887090 /* PreviewSupport.swift in Sources */,
 				FEC7425432776102FDAFC028 /* RemoteContent.swift in Sources */,
 				5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */,
 				BD9E386D9EE5FEC1D0A02145 /* RemoteViewModel.swift in Sources */,
+				F3F433CD8276ADA1D799E251 /* SettingsView.swift in Sources */,
 				C80FC2E78FBF686CF8B93DCC /* StatusItemMenu.swift in Sources */,
 				21B7C5D89D842F25B31AB072 /* Theme.swift in Sources */,
 			);

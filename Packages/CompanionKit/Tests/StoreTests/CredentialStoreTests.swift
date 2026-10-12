@@ -16,6 +16,8 @@ private let sample = PairingCredentials(
     #expect(try store.credentials(for: "tv") == nil)
     try store.save(sample, for: "tv")
     #expect(try store.credentials(for: "tv") == sample)
+    try store.save(sample, for: "other")
+    #expect(try store.pairedDeviceIDs() == ["other", "tv"])
     try store.removeCredentials(for: "tv")
     #expect(try store.credentials(for: "tv") == nil)
 }
@@ -26,8 +28,10 @@ private let sample = PairingCredentials(
     defer { try? store.removeCredentials(for: "tv") }
 
     #expect(try store.credentials(for: "tv") == nil)
+    #expect(try store.pairedDeviceIDs() == [])
     try store.save(sample, for: "tv")
     #expect(try store.credentials(for: "tv") == sample)
+    #expect(try store.pairedDeviceIDs() == ["tv"])
 
     var updated = sample
     updated.theirID = Data("11:22:33:44:55:66".utf8)

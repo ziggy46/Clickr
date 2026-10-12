@@ -20,6 +20,19 @@ final class RemoteViewModel {
     /// True while the "Type on the TV" field has focus, so remote shortcuts stand aside.
     var isTyping = false
 
+    /// TVs with saved pairing keys (for Settings).
+    private(set) var pairedDeviceIDs: [String] = []
+
+    /// The TV to select at launch; nil means the last one used.
+    var defaultDeviceID: String? = UserDefaults.standard.string(forKey: RemoteViewModel.defaultDeviceKey) {
+        didSet { UserDefaults.standard.set(defaultDeviceID, forKey: Self.defaultDeviceKey) }
+    }
+
+    /// Last known name for each TV we've seen, so Settings can name TVs that are off right now.
+    private var deviceNames: [String: String] = UserDefaults.standard.dictionary(forKey: RemoteViewModel.deviceNamesKey) as? [String: String] ?? [:]
+    private static let defaultDeviceKey = "DefaultDeviceID"
+    private static let deviceNamesKey = "DeviceNames"
+
     private let browser = DeviceBrowser()
     private let store: CredentialStore = KeychainCredentialStore()
     private var sessions: [DiscoveredDevice.ID: AppleTVSession] = [:]
@@ -53,10 +66,12 @@ final class RemoteViewModel {
 
     private func watchDevices() async {
         await browser.start()
-        selectedDeviceID = UserDefaults.standard.string(forKey: Self.selectedDeviceKey)
+        refreshPairedDevices()
+        selectedDeviceID = defaultDeviceID ?? UserDefaults.standard.string(forKey: Self.selectedDeviceKey)
         selectionIsAutomatic = selectedDeviceID == nil
         for await devices in await browser.devices {
             self.devices = devices
+            rememberNames(of: devices)
             // Until the user chooses, follow the preferred TV, so a paired TV that shows up
             // a moment after an unpaired one still wins.
             if selectionIsAutomatic, let preferred = preferredDevice(in: devices) {
@@ -108,6 +123,50 @@ final class RemoteViewModel {
         }
         // Paired TVs connect right away; an unpaired one waits for the pairing view.
         Task { await session.connect() }
+    }
+
+    // MARK: - Settings
+
+    /// Every TV Settings can offer: the ones on the network plus paired ones that aren't.
+    var knownDeviceIDs: [String] {
+        var ids = devices.map(\.id)
+        for id in pairedDeviceIDs where !ids.contains(id) { ids.append(id) }
+        return ids
+    }
+
+    func name(for deviceID: String) -> String {
+        devices.first { $0.id == deviceID }?.name ?? deviceNames[deviceID] ?? "Apple TV"
+    }
+
+    func refreshPairedDevices() {
+        pairedDeviceIDs = (try? store.pairedDeviceIDs()) ?? []
+    }
+
+    /// Removes the pairing key. The TV keeps its "Clickr" entry until removed there.
+    func forget(_ deviceID: String) {
+        if let session = sessions.removeValue(forKey: deviceID) {
+            Task { await session.disconnect() }
+        }
+        do {
+            try store.removeCredentials(for: deviceID)
+        } catch {
+            log.error("Couldn't remove the pairing key: \(String(describing: error), privacy: .public)")
+        }
+        if defaultDeviceID == deviceID { defaultDeviceID = nil }
+        refreshPairedDevices()
+        if observedDeviceID == deviceID {
+            observedDeviceID = nil
+            observeSelectedDevice()
+        }
+    }
+
+    private func rememberNames(of devices: [DiscoveredDevice]) {
+        var changed = false
+        for device in devices where deviceNames[device.id] != device.name {
+            deviceNames[device.id] = device.name
+            changed = true
+        }
+        if changed { UserDefaults.standard.set(deviceNames, forKey: Self.deviceNamesKey) }
     }
 
     // MARK: - Remote actions
@@ -170,6 +229,7 @@ final class RemoteViewModel {
         do {
             try await session.finishPairing(pin: pin)
             pairingMessage = nil
+            refreshPairedDevices()
             await session.connect()
             return true
         } catch PairSetup.PairingError.wrongPIN {

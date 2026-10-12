@@ -7,6 +7,8 @@ public protocol CredentialStore: Sendable {
     func credentials(for deviceID: String) throws -> PairingCredentials?
     func save(_ credentials: PairingCredentials, for deviceID: String) throws
     func removeCredentials(for deviceID: String) throws
+    /// Identifiers of every Apple TV with saved credentials.
+    func pairedDeviceIDs() throws -> [String]
 }
 
 /// Stores credentials as generic passwords in the login Keychain, one item per Apple TV.
@@ -54,6 +56,20 @@ public struct KeychainCredentialStore: CredentialStore {
         guard status == errSecSuccess || status == errSecItemNotFound else { throw KeychainError(status: status) }
     }
 
+    public func pairedDeviceIDs() throws -> [String] {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecReturnAttributes as String: true,
+            kSecMatchLimit as String: kSecMatchLimitAll,
+        ]
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return [] }
+        guard status == errSecSuccess, let items = result as? [[String: Any]] else { throw KeychainError(status: status) }
+        return items.compactMap { $0[kSecAttrAccount as String] as? String }.sorted()
+    }
+
     private func baseQuery(_ deviceID: String) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
@@ -80,5 +96,9 @@ public final class InMemoryCredentialStore: CredentialStore, @unchecked Sendable
 
     public func removeCredentials(for deviceID: String) throws {
         lock.withLock { items[deviceID] = nil }
+    }
+
+    public func pairedDeviceIDs() throws -> [String] {
+        lock.withLock { items.keys.sorted() }
     }
 }

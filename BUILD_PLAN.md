@@ -426,6 +426,15 @@ Key repeat on arrows sends repeated presses.
 - Respect Reduce Transparency: on macOS 26 with it enabled, use the fallback colors from 5.3. (Implemented as: show the whole fallback design from 5.3.)
 - Respect Increase Contrast: borders go to white 50%. (The glass container is now the system's, which handles its own contrast.)
 
+### 5.8 Settings (added at the owner's request, 2026-10-12)
+
+Not part of the original design. A standard macOS Settings window (SwiftUI `Settings` scene, grouped form, system styling), opened from **Settings… (⌘,)** in the icon's right-click menu, above Quit.
+
+- **Launch at login:** toggle using `SMAppService.mainApp`. If macOS needs approval, a note points to System Settings > General > Login Items.
+- **Default Apple TV:** "Last used" (the default) or a specific TV. Applied at launch.
+- **Paired Apple TVs:** every TV with a pairing key, each with **Forget…** behind a confirmation. Forgetting removes the Keychain item only; the TV keeps its "Clickr" entry until it's removed under Remotes and Devices on the TV, which the confirmation says.
+- **Global shortcut:** record a key combination (needs ⌘, ⌥ or ⌃; Esc cancels) that opens or closes the remote from anywhere. Registered with the Carbon hot key API, which works in the sandbox without accessibility permission. Off until set.
+
 ---
 
 ## 6. Liquid Glass implementation notes
