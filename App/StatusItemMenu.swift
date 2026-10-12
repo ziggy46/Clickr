@@ -10,6 +10,8 @@ enum StatusItemMenu {
     static var openSettings: (() -> Void)?
     /// When set, the menu leads with an "Update Available" item.
     static var availableUpdate: Release?
+    /// Called by that item; set by the SwiftUI side, which owns the update controller.
+    static var showUpdate: (() -> Void)?
 
     static func install() {
         guard monitor == nil else { return }
@@ -93,9 +95,7 @@ enum StatusItemMenu {
         }
 
         @objc func openUpdate() {
-            if let url = StatusItemMenu.availableUpdate?.pageURL {
-                NSWorkspace.shared.open(url)
-            }
+            StatusItemMenu.showUpdate?()
         }
     }
 }

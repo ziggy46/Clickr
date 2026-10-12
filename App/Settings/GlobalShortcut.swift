@@ -3,7 +3,7 @@ import Carbon.HIToolbox
 import SwiftUI
 
 /// A key combination that opens the remote from anywhere. Uses the Carbon hot key API,
-/// which works in the sandbox and needs no accessibility permission.
+/// which needs no accessibility permission.
 struct KeyCombo: Codable, Equatable {
     var keyCode: UInt32
     var carbonModifiers: UInt32

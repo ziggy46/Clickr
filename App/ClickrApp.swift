@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct ClickrApp: App {
+    // Stored properties are set up in order, so this runs before anything below reads a setting.
+    private let preferencesMigrated: Void = SandboxPreferences.migrateIfNeeded()
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = RemoteViewModel()
     @State private var updates = UpdateController()
@@ -57,6 +59,7 @@ private struct MenuBarLabel: View {
         MenuBarIcon(state: model.connectionState)
             .onAppear {
                 StatusItemMenu.openSettings = { openSettings() }
+                StatusItemMenu.showUpdate = { updates.presentAvailableUpdate() }
                 updates.start()
                 #if DEBUG
                 PreviewWindow.showIfRequested(model: model)
