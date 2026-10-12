@@ -101,6 +101,7 @@ Each frame is:
 - Frame types ✓ (verified, pyatv 0.18.0): `PS_Start=3, PS_Next=4, PV_Start=5, PV_Next=6, U_OPACK=7, E_OPACK=8, P_OPACK=9, SessionStart req/rsp=16/17`. Also `NoOp=1, PA_Req=10, PA_Rsp=11, SessionData=18, FamilyIdentity req/rsp/update=32/33/34`.
 - *From pyatv:* only the first frame of each auth phase uses `PS_Start`/`PV_Start`; every later frame in that phase, **including the device's responses**, uses `PS_Next`/`PV_Next`.
 - *From pyatv:* once encrypted, the 3-byte length **includes the 16-byte Poly1305 tag**. Empty payloads are sent unencrypted (no tag).
+- *Seen on a real Apple TV 4K (Milestone 2):* the reply to `PS_Start` is a `PS_Next` frame whose OPACK is just `{"_pd": …}`, with **no `_x`**, so match auth replies by frame type rather than transaction ID (pyatv does the same). Its TLV holds SeqNo 2, a 16-byte salt, a 384-byte public key, and an extra tag `0x1B` = `01` that pyatv ignores.
 
 ### 3.3 OPACK
 
@@ -453,4 +454,5 @@ Key repeat on arrows sends repeated presses.
   - Matched the plan: frame types, HID codes, SRP username, `_pd`/`_pwTy`, envelope keys, `_sessionStart`/`_srvT`, `ClientEncrypt-main`/`ServerEncrypt-main`, AAD = frame header.
   - Corrected: transport nonce layout (12-byte little-endian counter, zero padding at the end).
   - Added: empty HKDF salt for session keys; pairing salt/info strings; fixed pairing nonces; tag counted in frame length; `_auTy: 4`; `_systemInfo` / `TVRCSessionStart`; Companion TXT keys and the Apple TV filter.
+- **Milestone 2** acceptance confirmed against a real Apple TV 4K: TCP connect, hand-built `PS_Start` sent, `PS_Next` reply parsed (decoded with pyatv to check its contents).
 - **Milestone 1** acceptance confirmed on a real Apple TV: listed by name within 3 s, other Companion devices filtered out, removed after unplugging.
