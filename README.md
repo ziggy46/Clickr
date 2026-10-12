@@ -218,7 +218,7 @@ swift test
   .venv/bin/python scripts/gen_vectors.py
   ```
 - **Real-TV tests:** the `IntegrationTests` target runs against a real Apple TV when you set `CLICKR_TV_HOST` (and `CLICKR_TV_PORT`); otherwise it's skipped.
-- **Builds and releases:** `.github/workflows/build.yml` runs the tests and builds the arm64 and universal zips on every push. Pushing a tag like `v1.2.0` builds that version and creates a **draft** release with both zips and their SHA-256 checksums; publish it when it looks right. Clickr's update check only sees published releases.
+- **Builds and releases:** `.github/workflows/build.yml` runs the tests and builds the arm64 and universal zips on every push and pull request. Releases are automatic: when a push to `main` carries a version (`MARKETING_VERSION` in `project.yml`) that hasn't been tagged yet, the workflow tags it `v<version>` and publishes a release with both zips and their SHA-256 checksums. To ship a new version, bump `MARKETING_VERSION` and push.
 - **Debug previews:** debug builds accept `-ClickrPreviewState`, `-ClickrPreviewDesign`, `-ClickrPreviewNowPlaying` and friends to show any screen with sample data. See `App/PreviewSupport.swift`.
 - **Design notes:** `BUILD_PLAN.md` is the original spec, with notes on every protocol detail that was checked or corrected along the way.
 
