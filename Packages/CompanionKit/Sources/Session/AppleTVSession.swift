@@ -443,7 +443,7 @@ public actor AppleTVSession {
         let delays: [Duration] = [.seconds(5), .seconds(15), .seconds(60)]
         var attempt = 0
         // Same address as the Companion connection; Apple TVs serve AirPlay on port 7000.
-        // (Looking AirPlay up by its Bonjour name fails with NoAuth inside the sandbox.)
+        // (Looking AirPlay up by its Bonjour name failed with NoAuth back when Clickr was sandboxed.)
         let endpoint = NWEndpoint.hostPort(host: host, port: 7000)
         log.info("Now playing: AirPlay at \(String(describing: endpoint), privacy: .public)")
         while !Task.isCancelled, currentState == .connected {

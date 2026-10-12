@@ -61,20 +61,40 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Updates") {
+            Section {
                 Toggle("Check for updates automatically", isOn: $updates.checksAutomatically)
+                Toggle(isOn: $updates.installsAutomatically) {
+                    Text("Install updates automatically")
+                    Text("Downloads new versions in the background and restarts Clickr when you're not using it.")
+                }
+                .disabled(!updates.checksAutomatically || updates.installBlocker != nil)
                 LabeledContent("Clickr \(updates.currentVersion)") {
                     HStack(spacing: 8) {
+                        if updates.installState == .preparing || updates.installState == .waitingToRestart {
+                            ProgressView().controlSize(.small)
+                        }
                         if !updateStatus.isEmpty {
                             Text(updateStatus).foregroundStyle(.secondary)
                         }
-                        if updates.availableRelease != nil {
-                            Button("Download…") { updates.openReleasePage() }
-                        } else {
+                        if updates.availableRelease == nil {
                             Button("Check Now") { updates.checkNow() }
                                 .disabled(updates.status == .checking)
+                        } else if updates.canInstallAvailableUpdate {
+                            Button("Install and Restart") { updates.installNow() }
+                                .disabled(updates.installState == .preparing)
+                        } else {
+                            Button("Download…") { updates.openReleasePage() }
                         }
                     }
+                }
+            } header: {
+                Text("Updates")
+            } footer: {
+                if let message = updateFooter {
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -103,9 +123,20 @@ struct SettingsView: View {
         case .checking: "Checking…"
         case .upToDate: "Up to date"
         case .noReleases: "No releases yet"
-        case .available(let release): "Version \(release.version) is available"
+        case .available(let release):
+            switch updates.installState {
+            case .preparing: "Downloading \(release.version)…"
+            case .waitingToRestart: "Restarts when idle"
+            default: "Version \(release.version) is available"
+            }
         case .failed(let message): message
         }
+    }
+
+    /// Why installing didn't work, or why it can't happen from inside Clickr.
+    private var updateFooter: String? {
+        if case .failed(let message) = updates.installState { return message }
+        return updates.installBlocker
     }
 
     private var defaultDevice: Binding<String?> {
