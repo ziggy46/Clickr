@@ -37,7 +37,9 @@ It's free and open source. It talks to your Apple TV directly over your home net
 
 ## Installing
 
-1. Download the latest **Clickr.zip** from the [Releases](../../releases) page.
+1. Download the latest release from the [Releases](../../releases) page. There are two zips:
+   - **Clickr-x.y.z-universal.zip** runs on every Mac (Apple silicon and Intel). Pick this one if you're not sure.
+   - **Clickr-x.y.z-arm64.zip** is a smaller download for Apple silicon Macs (M1 and later) only.
 2. Unzip it and drag **Clickr** into your **Applications** folder.
 3. Open Clickr. A remote icon appears in your menu bar (Clickr has no Dock icon).
 
@@ -216,6 +218,7 @@ swift test
   .venv/bin/python scripts/gen_vectors.py
   ```
 - **Real-TV tests:** the `IntegrationTests` target runs against a real Apple TV when you set `CLICKR_TV_HOST` (and `CLICKR_TV_PORT`); otherwise it's skipped.
+- **Builds and releases:** `.github/workflows/build.yml` runs the tests and builds the arm64 and universal zips on every push. Pushing a tag like `v1.2.0` builds that version and creates a **draft** release with both zips and their SHA-256 checksums; publish it when it looks right. Clickr's update check only sees published releases.
 - **Debug previews:** debug builds accept `-ClickrPreviewState`, `-ClickrPreviewDesign`, `-ClickrPreviewNowPlaying` and friends to show any screen with sample data. See `App/PreviewSupport.swift`.
 - **Design notes:** `BUILD_PLAN.md` is the original spec, with notes on every protocol detail that was checked or corrected along the way.
 
