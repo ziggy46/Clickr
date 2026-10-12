@@ -33,9 +33,7 @@ struct RemotePopover: View {
     @ViewBuilder
     private var remote: some View {
         if theme.isGlass, #available(macOS 26, *) {
-            GlassEffectContainer(spacing: 14) {
-                GlassRemoteView(model: model)
-            }
+            GlassRemoteView(model: model)
         } else {
             FallbackRemoteView(model: model)
         }
