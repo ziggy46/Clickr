@@ -41,6 +41,8 @@ public actor AirPlayRemoteControl {
         case noAddress
         case timeout(String)
         case closed
+        /// The TV refused a playback command (MRP SendError).
+        case commandFailed(Int, sendError: Int)
     }
 
     /// MRP messages the TV pushes (anything that isn't a reply to our requests). Finishes
@@ -194,6 +196,16 @@ public actor AirPlayRemoteControl {
                 try? await Task.sleep(for: timeout)
                 self.failRequest(identifier, AirPlayError.timeout(String(describing: kind)))
             }
+        }
+    }
+
+    /// Sends a playback command and waits for the TV's result, like pyatv's
+    /// send_and_receive. A nonzero sendError (no such command, app not responding...)
+    /// throws.
+    public func sendCommand(_ command: PlaybackCommand, skipInterval: Float? = nil, playbackPosition: Double? = nil) async throws {
+        let reply = try await request(.sendCommand, MRPRequests.sendCommand(command, skipInterval: skipInterval, playbackPosition: playbackPosition))
+        if let error = reply.inner?.uint(1), error != 0 {
+            throw AirPlayError.commandFailed(command.rawValue, sendError: Int(error))
         }
     }
 

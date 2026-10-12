@@ -67,6 +67,26 @@ private func eventually(within limit: Duration = .seconds(15), _ condition: () -
         await session.close()
     }
 
+    @Test func sendsPlaybackCommands() async throws {
+        let server = try FakeAirPlayServer()
+        try await server.start()
+        defer { server.stop() }
+        let session = AirPlayRemoteControl(endpoint: server.endpoint, credentials: server.clientCredentials, identity: identity)
+        try await session.start()
+
+        try await session.sendCommand(.skipForward, skipInterval: 15)
+        try await session.sendCommand(.seekToPlaybackPosition, playbackPosition: 42.5)
+        // The fake refuses previous track.
+        await #expect(throws: AirPlayRemoteControl.AirPlayError.commandFailed(6, sendError: 2)) {
+            try await session.sendCommand(.previousTrack)
+        }
+        let commands = server.snapshot().commands
+        #expect(commands.map(\.command) == [18, 45, 6])
+        #expect(commands[0].skipInterval == 15 && commands[0].position == nil)
+        #expect(commands[1].position == 42.5 && commands[1].skipInterval == nil)
+        await session.close()
+    }
+
     @Test func keepsTheSessionAliveWithFeedback() async throws {
         let server = try FakeAirPlayServer()
         try await server.start()

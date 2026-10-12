@@ -20,6 +20,8 @@ final class FakeAirPlayServer: @unchecked Sendable {
         var eventReplies: [HTTPMessage] = []
         var feedbackCount = 0
         var mrpTypes: [Int] = []
+        /// Playback commands received: command, skipInterval, playbackPosition.
+        var commands: [(command: Int, skipInterval: Float?, position: Double?)] = []
         var dataSeqnos: [UInt64] = []
         var replies = 0
     }
@@ -177,6 +179,15 @@ final class FakeAirPlayServer: @unchecked Sendable {
             var setClient = ProtoWriter()
             setClient.message(1, client)
             push([MRPMessage.encode(.setNowPlayingClient, inner: setClient), Self.playingState()], on: link)
+        case .sendCommand:
+            let inner = message.inner
+            let command = Int(inner?.uint(1) ?? 0)
+            record.commands.append((command, inner?.message(2)?.float(5), inner?.message(2)?.double(9)))
+            // Previous track fails, so the error path can be tested.
+            var result = ProtoWriter()
+            result.varint(1, command == PlaybackCommand.previousTrack.rawValue ? 2 : 0)
+            result.varint(2, 0)
+            push([MRPMessage.encode(.sendCommandResult, identifier: message.identifier, inner: result)], on: link)
         case .playbackQueueRequest:
             var item = ProtoWriter()
             item.string(1, "ITEM-1")

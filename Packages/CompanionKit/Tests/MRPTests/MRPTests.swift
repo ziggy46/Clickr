@@ -8,6 +8,10 @@ struct MRPVectors: Decodable {
     let handshake: [String: String]
     let set_state: String
     let artwork_reply: String
+    let commands: [String: String]
+    let command_result: String
+    let set_state_commands: String
+    let default_commands: String
     let varint_300: String
 
     static let shared: MRPVectors = {
