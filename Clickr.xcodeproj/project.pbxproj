@@ -11,6 +11,7 @@
 		0DC6AC574BBC447E44B2EA71 /* GlobalShortcut.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */; };
 		20A1CF7C8556BBE62CB89C11 /* KeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA812B5B15FFCA8454605F3 /* KeyboardShortcuts.swift */; };
 		21B7C5D89D842F25B31AB072 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DDA00246752F5F774922B4 /* Theme.swift */; };
+		2662A76FCB7DBBEF9D7118D6 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 111E7281D72A8A2A7AA648EE /* AppIcon.icon */; };
 		4E24788F6B9CBABEC7887090 /* PreviewSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2995E5D98A242BF5CFCE0ABC /* PreviewSupport.swift */; };
 		5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C950CC1B98977FF4F0C0895C /* RemotePopover.swift */; };
 		57EA90EBB77688D343EDD6A8 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */; };
@@ -37,6 +38,7 @@
 		0ACF7A1145E9685FF4FE4007 /* CompanionKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CompanionKit; path = Packages/CompanionKit; sourceTree = SOURCE_ROOT; };
 		0B1D752D9195B218840BDCD4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		10E8ACEE67ADE724EDFCDAD9 /* PowerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerButton.swift; sourceTree = "<group>"; };
+		111E7281D72A8A2A7AA648EE /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalShortcut.swift; sourceTree = "<group>"; };
 		201189B612BC49040F04E5CB /* RemoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteViewModel.swift; sourceTree = "<group>"; };
 		20DDA00246752F5F774922B4 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 		8D8D6431E08590416BFD1B91 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				111E7281D72A8A2A7AA648EE /* AppIcon.icon */,
 				38D2A448680F3BC58FF3F9D2 /* Assets.xcassets */,
 				510D7D7F0733934161E5F020 /* Clickr.entitlements */,
 				A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */,
@@ -210,6 +213,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2662A76FCB7DBBEF9D7118D6 /* AppIcon.icon in Resources */,
 				CEB9CCBCE3AC0721441E09C5 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -251,7 +255,7 @@
 		463506C0BDA401A1F7E8916A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/Clickr.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
@@ -273,7 +277,7 @@
 		4F6C1DBAD67C31E9A1DC2042 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/Clickr.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
