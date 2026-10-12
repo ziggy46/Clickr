@@ -468,6 +468,65 @@ def srp_vectors():
     return vectors
 
 
+# Pairing (pair-setup M5 and M6) ------------------------------------------------
+
+
+def pairing_vectors():
+    """Drive pyatv's own pair-setup steps 3 and 4 with fixed keys.
+
+    Ed25519 signatures and the fixed ChaCha nonces make the output deterministic.
+    """
+    from types import SimpleNamespace
+
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from pyatv.auth.hap_srp import SRPAuthHandler, hkdf_expand
+    from pyatv.support import chacha20
+
+    raw = serialization.Encoding.Raw
+    session_key = fixed_bytes(21, 64)
+    client_seed = fixed_bytes(22, 32)
+    pairing_id = b"6F1B3C2A-9D4E-4F5A-8B7C-0D1E2F3A4B5C"
+    atv_seed = fixed_bytes(23, 32)
+    atv_id = b"AA:BB:CC:DD:EE:FF"
+
+    client_key = Ed25519PrivateKey.from_private_bytes(client_seed)
+    handler = SRPAuthHandler()
+    handler.initialize()
+    handler._signing_key = client_key
+    handler._auth_private = client_seed
+    handler._auth_public = client_key.public_key().public_bytes(raw, serialization.PublicFormat.Raw)
+    handler.pairing_id = pairing_id
+    handler._session = SimpleNamespace(key=session_key.hex())
+    m5 = handler.step3(name="Clickr")
+
+    # Build the TV's M6 the way a HAP accessory does, then let pyatv read it.
+    atv_key = Ed25519PrivateKey.from_private_bytes(atv_seed)
+    atv_public = atv_key.public_key().public_bytes(raw, serialization.PublicFormat.Raw)
+    accessory_x = hkdf_expand("Pair-Setup-Accessory-Sign-Salt", "Pair-Setup-Accessory-Sign-Info", session_key)
+    signature = atv_key.sign(accessory_x + atv_id + atv_public)
+    sub_tlv = write_tlv({TlvValue.Identifier: atv_id, TlvValue.PublicKey: atv_public, TlvValue.Signature: signature})
+    encrypt_key = hkdf_expand("Pair-Setup-Encrypt-Salt", "Pair-Setup-Encrypt-Info", session_key)
+    m6 = chacha20.Chacha20Cipher8byteNonce(encrypt_key, encrypt_key).encrypt(sub_tlv, nonce=b"PS-Msg06")
+    credentials = handler.step4(m6)
+    assert credentials.atv_id == atv_id and credentials.ltpk == atv_public
+
+    return {
+        "session_key": session_key.hex(),
+        "client_seed": client_seed.hex(),
+        "client_public": handler._auth_public.hex(),
+        "pairing_id": pairing_id.decode(),
+        "name": "Clickr",
+        "encrypt_key": encrypt_key.hex(),
+        "controller_x": hkdf_expand("Pair-Setup-Controller-Sign-Salt", "Pair-Setup-Controller-Sign-Info", session_key).hex(),
+        "m5_encrypted": m5.hex(),
+        "atv_seed": atv_seed.hex(),
+        "atv_public": atv_public.hex(),
+        "atv_id": atv_id.decode(),
+        "m6_encrypted": m6.hex(),
+    }
+
+
 def write(path: Path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n")
@@ -479,3 +538,4 @@ if __name__ == "__main__":
     write(TESTS / "TLV8Tests" / "Vectors" / "tlv8.json", tlv_vectors())
     write(TESTS / "BigIntTests" / "Vectors" / "bigint.json", bigint_vectors())
     write(TESTS / "SRPTests" / "Vectors" / "srp.json", srp_vectors())
+    write(TESTS / "PairingTests" / "Vectors" / "pairing.json", pairing_vectors())

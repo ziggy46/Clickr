@@ -22,7 +22,7 @@ struct PairingView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(theme.primaryText)
 
-            Text(model.pairingFailed ? "That code didn't match. Try again." : "Enter the 4-digit code shown on your TV.")
+            Text(model.pairingMessage ?? "Enter the 4-digit code shown on your TV.")
                 .font(.system(size: 13))
                 .foregroundStyle(theme.isGlass ? Color.white.opacity(0.8) : theme.secondaryText)
 
@@ -33,6 +33,8 @@ struct PairingView: View {
 
             Button {
                 model.cancelPairing()
+                // Close the popover; opening it again starts a new pairing.
+                NSApp.keyWindow?.close()
             } label: {
                 Text("Cancel")
                     .font(.system(size: 14))
@@ -51,6 +53,8 @@ struct PairingView: View {
         .multilineTextAlignment(.center)
         .popoverContainer(theme, width: 308, padding: 24)
         .onAppear { pinFocused = true }
+        .task { await model.beginPairing() }
+        .onDisappear { model.cancelPairing() }
     }
 
     private var badge: some View {

@@ -21,3 +21,8 @@ enum SRPGroup {
 
     static let generator: BigUInt = 5
 }
+
+extension SRPClient {
+    /// The group prime N, for code that plays the server side in tests.
+    public static var groupPrime: BigUInt { SRPGroup.prime }
+}
