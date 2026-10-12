@@ -26,8 +26,16 @@ final class RemoteViewModel {
     private var isPreview = false
     private let log = Logger(subsystem: "com.ziggy46.clickr", category: "Remote")
 
+    /// The last version of the selected TV we saw, so a TV that briefly drops out of
+    /// discovery doesn't make the selection jump to another one.
+    private var lastSelectedDevice: DiscoveredDevice?
+    private static let selectedDeviceKey = "SelectedDeviceID"
+    /// True until the user picks a TV (now or in an earlier launch).
+    private var selectionIsAutomatic = true
+
     var selectedDevice: DiscoveredDevice? {
-        devices.first { $0.id == selectedDeviceID } ?? devices.first
+        guard let selectedDeviceID else { return nil }
+        return devices.first { $0.id == selectedDeviceID } ?? lastSelectedDevice
     }
 
     init() {
@@ -42,8 +50,18 @@ final class RemoteViewModel {
 
     private func watchDevices() async {
         await browser.start()
+        selectedDeviceID = UserDefaults.standard.string(forKey: Self.selectedDeviceKey)
+        selectionIsAutomatic = selectedDeviceID == nil
         for await devices in await browser.devices {
             self.devices = devices
+            // Until the user chooses, follow the preferred TV, so a paired TV that shows up
+            // a moment after an unpaired one still wins.
+            if selectionIsAutomatic, let preferred = preferredDevice(in: devices) {
+                selectedDeviceID = preferred.id
+            }
+            if let current = devices.first(where: { $0.id == selectedDeviceID }) {
+                lastSelectedDevice = current
+            }
             observeSelectedDevice()
         }
     }
@@ -51,8 +69,16 @@ final class RemoteViewModel {
     // MARK: - Devices and sessions
 
     func select(_ device: DiscoveredDevice) {
+        selectionIsAutomatic = false
         selectedDeviceID = device.id
+        lastSelectedDevice = device
+        UserDefaults.standard.set(device.id, forKey: Self.selectedDeviceKey)
         observeSelectedDevice()
+    }
+
+    /// With nothing selected yet, prefer a TV we're already paired with.
+    private func preferredDevice(in devices: [DiscoveredDevice]) -> DiscoveredDevice? {
+        devices.first { ((try? store.credentials(for: $0.id)) ?? nil) != nil } ?? devices.first
     }
 
     private var selectedSession: AppleTVSession? {
@@ -135,17 +161,20 @@ final class RemoteViewModel {
         return false
     }
 
-    /// Cancel button, or the popover closing: the TV takes the PIN off the screen.
+    /// Cancel button, or the popover closing: the TV takes the PIN off the screen. Stops
+    /// pairing on every TV, in case the selection moved while one was in progress.
     func cancelPairing() {
         pairingStart?.cancel()
-        guard let session = selectedSession else { return }
-        Task { await session.cancelPairing() }
+        for session in sessions.values {
+            Task { await session.cancelPairing() }
+        }
     }
 
     #if DEBUG
     private func apply(_ preview: PreviewOverrides) {
         isPreview = true
         devices = preview.devices
+        selectedDeviceID = preview.devices.first?.id
         connectionState = preview.state
         pairingMessage = preview.pairingFailed ? "That code didn't match. Try again." : nil
     }
