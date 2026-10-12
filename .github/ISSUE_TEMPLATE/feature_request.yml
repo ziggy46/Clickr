@@ -1,0 +1,48 @@
+name: Feature request
+description: An idea for something Clickr could do.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Please check the [existing issues](https://github.com/ziggy46/Clickr/issues?q=is%3Aissue) first in case it's already been suggested. If it has, a 👍 on that issue helps show what people want most.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Clickr to do?
+      description: Describe the feature and what you'd use it for.
+      placeholder: I'd like a button that opens a specific app on the TV, so I can jump straight to YouTube.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you do this today?
+      description: A workaround you use now, or why there isn't one.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Clickr is it about?
+      multiple: true
+      options:
+        - The remote
+        - Now playing
+        - Keyboard and trackpad
+        - Settings
+        - Updates
+        - Something new
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Sketches, screenshots or examples from other apps are welcome.
+    validations:
+      required: false

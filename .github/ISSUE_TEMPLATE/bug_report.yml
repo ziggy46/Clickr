@@ -1,0 +1,121 @@
+name: Bug report
+description: Something in Clickr doesn't work the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! The [Troubleshooting](https://github.com/ziggy46/Clickr#troubleshooting) section of the README covers the most common problems, so it's worth a quick look first. Please also check the [existing issues](https://github.com/ziggy46/Clickr/issues?q=is%3Aissue) in case someone already reported it.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect to happen instead?
+      placeholder: When I swipe left on the clickpad, the TV moves right.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can I make it happen?
+      description: The steps that lead to the problem, if you know them.
+      placeholder: |
+        1. Open the remote
+        2. Start a video in the TV app
+        3. Swipe left with two fingers over the clickpad
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Clickr?
+      multiple: true
+      options:
+        - Pairing
+        - Finding or connecting to the Apple TV
+        - Buttons or keyboard shortcuts
+        - Trackpad swiping
+        - Typing on the TV
+        - Now playing or playback controls
+        - Power button
+        - Updates
+        - Settings
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: clickr-version
+    attributes:
+      label: Clickr version
+      description: It's at the bottom of Settings > Updates.
+      placeholder: "0.3.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: download
+    attributes:
+      label: Which download?
+      options:
+        - Apple silicon (arm64)
+        - Universal
+        - Built from source
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      description: Apple menu > About This Mac.
+      placeholder: macOS 26.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mac
+    attributes:
+      label: Mac
+      options:
+        - Apple silicon (M1 or later)
+        - Intel
+    validations:
+      required: true
+
+  - type: input
+    id: apple-tv
+    attributes:
+      label: Apple TV model and tvOS version
+      description: On the Apple TV, Settings > General > About.
+      placeholder: Apple TV 4K (3rd generation), tvOS 26.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional, but very helpful)
+      description: |
+        To capture Clickr's logs, run this in Terminal, make the problem happen, then press Control-C and paste what it printed:
+
+        ```
+        /usr/bin/log stream --level info --style compact --predicate 'subsystem == "com.ziggy46.clickr"'
+        ```
+
+        The logs never include pairing keys, but they do include your Apple TVs' names and their addresses on your home network. Edit out anything you'd rather not share.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, a screen recording, or anything that seems related (for example, it only happens with one app on the TV).
+    validations:
+      required: false
