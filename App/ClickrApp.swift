@@ -6,13 +6,19 @@ struct ClickrApp: App {
 
     init() {
         StatusItemMenu.install()
+        #if DEBUG
+        IconDump.runIfRequested()
+        #endif
     }
 
     var body: some Scene {
         MenuBarExtra {
             RemotePopover(model: model)
         } label: {
-            MenuBarIcon()
+            MenuBarIcon(state: model.connectionState)
+                #if DEBUG
+                .onAppear { PreviewWindow.showIfRequested(model: model) }
+                #endif
         }
         .menuBarExtraStyle(.window)
     }

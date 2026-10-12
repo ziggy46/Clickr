@@ -224,7 +224,7 @@ actor AppleTVSession {
 | 5 | Pair-setup + Keychain | PIN appears on the TV; entering it in the Pairing view succeeds; credentials survive an app relaunch |
 | 6 | Pair-verify + encryption + first button | Relaunch, auto-connect without a PIN, press Select, and the TV reacts. **This is the core win.** Also: the first real `E_OPACK` reply that has an array of dicts (e.g. `_systemInfo` or an app list) is the live test of the OPACK back-reference rule in 3.3; if a reference resolves to the wrong value, revisit it. |
 | 7 | All buttons + keyboard shortcuts | Every control in Section 5 works; shortcuts in 5.6 work while the popover is focused |
-| 8 | Full UI pass | Glass design on macOS 26 and fallback on 14/15 match Section 5 exactly; all icon states (5.1) wired to `ConnectionState`; multi-TV switcher works |
+| 8 | Full UI pass | Glass design on macOS 26 and fallback on 14/15 match Section 5 exactly; all icon states (5.1) wired to `ConnectionState`; multi-TV switcher works. **Built early on 2026-10-11 at the owner's request**, before Milestones 5 to 7. Until the session exists the UI runs on placeholder state (a found TV shows "Not connected"), and button presses only log. |
 | 9 | Text input (stretch) | Typing in "Type on the TV" fills a tvOS search field |
 | 10 | Now playing (stretch) | Card shows the real title, app and progress; hidden when nothing is playing |
 | 11 | Ship | Developer ID signing, notarization, `.dmg`; first-run Local Network prompt appears and works |
@@ -268,6 +268,8 @@ Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
 | Connected | Icon at 100% |
 | Open (popover showing) | Highlight drawn by the system. On macOS 26 it's the glass capsule; on older versions the standard menu bar highlight. Don't custom-draw it. |
 | Needs pairing | Icon plus a **5 pt-radius dot**, top-right (offset ≈ x +8, y +5 on a 56 × 48 test tile; scale to the 11 × 19 icon so the dot touches the body's top-right corner). Design color is blue `#0A84FF` (dark) / `#0A6CFF` (light). |
+
+**Shipped (Milestone 8):** the composited non-template `NSImage`. The remote is tinted at draw time with the label color for the current appearance and the dot is drawn in the blue for that appearance. It renders correctly on light and dark backgrounds in the debug icon dump, but the real menu bar applies its own vibrancy, so it still needs a look on a light and a dark menu bar. The dot is read as **5 pt across** at menu bar size (a 5 pt radius would be wider than the 11 pt icon), centered on the body's top-right corner; the canvas is 1 pt wider than the icon so the dot isn't clipped.
 
 **Known limitation:** a template image can't keep a colored dot. Try rendering the label as a composited non-template `NSImage` with the dot in system blue. If that tints badly in either menu bar appearance, fall back to a monochrome dot baked into a second template asset (`RemoteIconBadge`). Report which one shipped.
 
@@ -404,10 +406,12 @@ These work while the popover has focus. Use `.onKeyPress`.
 
 Key repeat on arrows sends repeated presses.
 
+*Still to check by hand (Milestone 8 build):* whether Esc closes the `MenuBarExtra` window even though the remote handles it, and whether keys reach the remote as soon as the popover opens.
+
 ### 5.7 Accessibility
 
 - Every icon-only button has an `accessibilityLabel` (Up, Down, Left, Right, Select, Back, Home, Play or pause, Volume up, Volume down, Switch Apple TV).
-- Respect Reduce Transparency: on macOS 26 with it enabled, use the fallback colors from 5.3.
+- Respect Reduce Transparency: on macOS 26 with it enabled, use the fallback colors from 5.3. (Implemented as: show the whole fallback design from 5.3.)
 - Respect Increase Contrast: borders go to white 50%.
 
 ---
@@ -425,6 +429,7 @@ Key repeat on arrows sends repeated presses.
 ```
 
 - Use the system glass APIs (`glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)` / `.glassProminent`). Don't fake glass with blur plus gradients on macOS 26.
+- **Checked against the macOS 27 SDK (Xcode 27):** all of these exist, available from macOS 26. However, `.buttonStyle(.glass)` and `.glassProminent` add about 4.25 pt of padding on every side of the label, so an 88 pt OK button renders at 96.5 pt and a 60 pt tile at 68.5 pt (measured). Buttons therefore use a small `GlassControlStyle` that applies `glassEffect(.regular.tint(...).interactive(), in: shape)` to the label directly. It's still the system glass, and the sizes come out exact (measured: OK 88, tiles 60, switcher 36).
 - These API names come from the macOS 26 SDK as of mid-2026. **Confirm them against the installed Xcode SDK** and adjust if they've changed.
 - Keep both views reading from the same `RemoteViewModel`. No logic in views beyond layout.
 
