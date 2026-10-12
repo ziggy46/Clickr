@@ -1,0 +1,15 @@
+# Dev-only Python venv (pyatv test oracle)
+.venv/
+
+# Build output
+.build/
+build/
+DerivedData/
+*.xcresult
+
+# Xcode per-user state
+xcuserdata/
+*.xcuserstate
+.swiftpm/
+
+.DS_Store

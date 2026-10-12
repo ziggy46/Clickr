@@ -1,0 +1,376 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C950CC1B98977FF4F0C0895C /* RemotePopover.swift */; };
+		6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */; };
+		8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */; };
+		CEB9CCBCE3AC0721441E09C5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38D2A448680F3BC58FF3F9D2 /* Assets.xcassets */; };
+		F66E90FE9610D25A8C7488EA /* CompanionKit in Frameworks */ = {isa = PBXBuildFile; productRef = F361A362F46DB6723D8DEFF0 /* CompanionKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0ACF7A1145E9685FF4FE4007 /* CompanionKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CompanionKit; path = Packages/CompanionKit; sourceTree = SOURCE_ROOT; };
+		0B1D752D9195B218840BDCD4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3755025F2A6E5FC0B7FF07BE /* Clickr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clickr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		38D2A448680F3BC58FF3F9D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIcon.swift; sourceTree = "<group>"; };
+		510D7D7F0733934161E5F020 /* Clickr.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Clickr.entitlements; sourceTree = "<group>"; };
+		A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickrApp.swift; sourceTree = "<group>"; };
+		C950CC1B98977FF4F0C0895C /* RemotePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemotePopover.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4C771880DCA82AA11A55573E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F66E90FE9610D25A8C7488EA /* CompanionKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6984BD49DD51F434379A1BAA /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				0ACF7A1145E9685FF4FE4007 /* CompanionKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		6F6AB1CC8F1B6553C4A55BAA = {
+			isa = PBXGroup;
+			children = (
+				8D8D6431E08590416BFD1B91 /* App */,
+				6984BD49DD51F434379A1BAA /* Packages */,
+				D997EA5CCE4BEF76567A9A7B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8D8D6431E08590416BFD1B91 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				38D2A448680F3BC58FF3F9D2 /* Assets.xcassets */,
+				510D7D7F0733934161E5F020 /* Clickr.entitlements */,
+				A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */,
+				0B1D752D9195B218840BDCD4 /* Info.plist */,
+				FCAE7F61AD4C9D39B3676557 /* Views */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D997EA5CCE4BEF76567A9A7B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3755025F2A6E5FC0B7FF07BE /* Clickr.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FCAE7F61AD4C9D39B3676557 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */,
+				C950CC1B98977FF4F0C0895C /* RemotePopover.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2B9744BC70F59AB8DBFBDF5D /* Clickr */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A838EE6328B8A736DA670D5D /* Build configuration list for PBXNativeTarget "Clickr" */;
+			buildPhases = (
+				DF363DC063069EB46E98E887 /* Sources */,
+				474DAAFE515D1DC9E618A1A9 /* Resources */,
+				4C771880DCA82AA11A55573E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Clickr;
+			packageProductDependencies = (
+				F361A362F46DB6723D8DEFF0 /* CompanionKit */,
+			);
+			productName = Clickr;
+			productReference = 3755025F2A6E5FC0B7FF07BE /* Clickr.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		120BD5C1149F81517E1E469B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					2B9744BC70F59AB8DBFBDF5D = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = DB4B067864277EAB28B6DA47 /* Build configuration list for PBXProject "Clickr" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6F6AB1CC8F1B6553C4A55BAA;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7F27D7A545BB48C61C00E5D8 /* XCLocalSwiftPackageReference "Packages/CompanionKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D997EA5CCE4BEF76567A9A7B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2B9744BC70F59AB8DBFBDF5D /* Clickr */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		474DAAFE515D1DC9E618A1A9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CEB9CCBCE3AC0721441E09C5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DF363DC063069EB46E98E887 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */,
+				6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */,
+				5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		463506C0BDA401A1F7E8916A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_ENTITLEMENTS = App/Clickr.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ziggy46.clickr;
+				PRODUCT_NAME = Clickr;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4F6C1DBAD67C31E9A1DC2042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_ENTITLEMENTS = App/Clickr.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ziggy46.clickr;
+				PRODUCT_NAME = Clickr;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		830E0E45C5E8A3EF1483BCAA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A1AE7B624DA2F3B9DB23E9A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A838EE6328B8A736DA670D5D /* Build configuration list for PBXNativeTarget "Clickr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				463506C0BDA401A1F7E8916A /* Debug */,
+				4F6C1DBAD67C31E9A1DC2042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DB4B067864277EAB28B6DA47 /* Build configuration list for PBXProject "Clickr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				830E0E45C5E8A3EF1483BCAA /* Debug */,
+				A1AE7B624DA2F3B9DB23E9A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7F27D7A545BB48C61C00E5D8 /* XCLocalSwiftPackageReference "Packages/CompanionKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/CompanionKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F361A362F46DB6723D8DEFF0 /* CompanionKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CompanionKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 120BD5C1149F81517E1E469B /* Project object */;
+}
