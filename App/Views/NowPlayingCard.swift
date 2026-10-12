@@ -75,7 +75,7 @@ struct NowPlayingCard: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.white.opacity(theme.isGlass ? 0.2 : 0.16))
                 Capsule()
-                    .fill(theme.isGlass ? Color.white : Color(hex: 0x0A84FF))
+                    .fill(theme.isGlass ? Color.white : Color.accentColor)
                     .frame(width: geometry.size.width * min(max(fraction, 0), 1))
             }
         }

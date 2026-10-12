@@ -34,7 +34,7 @@ struct MenuBarIcon: View {
         remote.draw(in: NSRect(origin: .zero, size: iconSize), from: .zero, operation: .sourceOver, fraction: 0.4)
     }
 
-    /// Not a template image, so the dot can stay blue. The remote is tinted at draw time with
+    /// Not a template image, so the dot can be the accent color. The remote is tinted at draw time with
     /// the menu bar's label color, which follows the menu bar's light or dark appearance.
     /// The canvas is 1 pt wider so the dot isn't clipped.
     private static let needsPairing: NSImage = {
@@ -47,10 +47,7 @@ struct MenuBarIcon: View {
 
             // Centered on the body's top-right corner (the body is x 2...11, y 1...23 of the
             // 14 x 24 viewBox).
-            let isDark = NSAppearance.currentDrawing().bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-            let blue = isDark ? NSColor(red: 10 / 255, green: 132 / 255, blue: 1, alpha: 1)
-                              : NSColor(red: 10 / 255, green: 108 / 255, blue: 1, alpha: 1)
-            blue.setFill()
+            NSColor.controlAccentColor.setFill()
             NSBezierPath(ovalIn: NSRect(x: 7, y: size.height - 5, width: 5, height: 5)).fill()
             return true
         }

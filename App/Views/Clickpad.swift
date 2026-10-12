@@ -62,7 +62,7 @@ struct Clickpad: View {
         .accessibilityLabel("Select")
 
         if theme.isGlass, #available(macOS 26, *) {
-            button.buttonStyle(GlassControlStyle(tint: Color(red: 10 / 255, green: 110 / 255, blue: 1).opacity(0.62)))
+            button.buttonStyle(GlassControlStyle(tint: Color.accentColor.opacity(0.62)))
         } else {
             button.buttonStyle(FilledButtonStyle(fill: Color(hex: 0x46464C), radius: nil))
         }

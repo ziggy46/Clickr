@@ -13,7 +13,7 @@ struct PairingView: View {
     @State private var shakes: CGFloat = 0
     @FocusState private var pinFocused: Bool
 
-    private static let pairBlue = Color(red: 10 / 255, green: 100 / 255, blue: 235 / 255).opacity(0.85)
+    private static let pairFill = Color.accentColor.opacity(0.85)
 
     var body: some View {
         VStack(spacing: 16) {
@@ -43,7 +43,7 @@ struct PairingView: View {
             } label: {
                 Text(model.deviceToReturnTo.map { "Back to \($0.name)" } ?? "Cancel")
                     .font(.system(size: 14))
-                    .foregroundStyle(Color(hex: 0xA9D2FF))
+                    .foregroundStyle(Color.accentText)
                     .frame(maxWidth: .infinity)
                     .frame(height: 40)
                     .contentShape(Rectangle())
@@ -138,9 +138,9 @@ struct PairingView: View {
         .disabled(digits.count < 4 || isVerifying)
 
         if theme.isGlass, #available(macOS 26, *) {
-            button.buttonStyle(GlassControlStyle(tint: Self.pairBlue))
+            button.buttonStyle(GlassControlStyle(tint: Self.pairFill))
         } else {
-            button.buttonStyle(FilledButtonStyle(fill: Self.pairBlue, radius: nil))
+            button.buttonStyle(FilledButtonStyle(fill: Self.pairFill, radius: nil))
         }
     }
 
@@ -163,7 +163,7 @@ private struct PINBox: View {
     let isFocused: Bool
     let theme: RemoteTheme
 
-    private static let focusBlue = Color(hex: 0x4DA3FF)
+    private static let focusColor = Color.accentColor
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -174,7 +174,7 @@ private struct PINBox: View {
             .background(Color.black.opacity(0.26), in: shape)
             .overlay {
                 if isFocused {
-                    shape.strokeBorder(Self.focusBlue, lineWidth: 2)
+                    shape.strokeBorder(Self.focusColor, lineWidth: 2)
                 } else {
                     shape.strokeBorder(theme.border(0.26), lineWidth: 1)
                 }
@@ -183,7 +183,7 @@ private struct PINBox: View {
                 if isFocused {
                     // 3 pt ring just outside the box.
                     RoundedRectangle(cornerRadius: 21, style: .continuous)
-                        .strokeBorder(Self.focusBlue.opacity(0.28), lineWidth: 3)
+                        .strokeBorder(Self.focusColor.opacity(0.28), lineWidth: 3)
                         .padding(-3)
                 }
             }
