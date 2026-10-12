@@ -26,24 +26,20 @@ struct RemoteContent: View {
 }
 
 extension View {
-    /// The popover background: system glass on macOS 26, a flat panel on 14 and 15.
+    /// The popover background.
+    ///
+    /// On macOS 26 the menu bar window already draws its own glass behind our content, and
+    /// clearing the window background doesn't remove it, so drawing a second glass panel
+    /// gave doubled corners. The glass design therefore uses the system's glass as the
+    /// container and only sets the size. On 14 and 15 we draw the flat fallback panel.
     @ViewBuilder
     func popoverContainer(_ theme: RemoteTheme, width: CGFloat, padding: CGFloat) -> some View {
-        let shape = RoundedRectangle(cornerRadius: theme.cornerRadius, style: .continuous)
-        let content = self.padding(padding).frame(width: width)
-        if theme.isGlass, #available(macOS 26, *) {
-            content.glassEffect(
-                .regular.tint(Color(red: 20 / 255, green: 26 / 255, blue: 40 / 255).opacity(0.5)),
-                in: shape
-            )
-            .overlay {
-                // The system glass draws its own edge, so only add one for Increase Contrast.
-                if theme.increasedContrast {
-                    shape.stroke(theme.border(0.24), lineWidth: 1)
-                }
-            }
+        let sized = self.padding(padding).frame(width: width)
+        if theme.isGlass {
+            sized
         } else {
-            content
+            let shape = RoundedRectangle(cornerRadius: theme.cornerRadius, style: .continuous)
+            sized
                 .background(RemoteTheme.fallbackBackground, in: shape)
                 .overlay(shape.stroke(theme.border(0.10), lineWidth: 1))
         }

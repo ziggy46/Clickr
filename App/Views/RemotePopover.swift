@@ -18,7 +18,7 @@ struct RemotePopover: View {
     private var content: some View {
         if model.connectionState == .needsPairing, let device = model.selectedDevice {
             PairingView(model: model, deviceName: device.name)
-                .windowBackgroundCleared()
+                .windowBackgroundCleared(!theme.isGlass)
         } else {
             remote
                 .focusable()
@@ -26,7 +26,7 @@ struct RemotePopover: View {
                 .focusEffectDisabled()
                 .modifier(RemoteKeyboardShortcuts(model: model, isEnabled: model.selectedDevice != nil))
                 .onAppear { focused = true }
-                .windowBackgroundCleared()
+                .windowBackgroundCleared(!theme.isGlass)
         }
     }
 
@@ -59,10 +59,11 @@ struct RemotePopover: View {
 }
 
 private extension View {
-    /// Lets our own rounded container be the popover's shape instead of the system window background.
+    /// For the fallback design, asks for no system window background so our flat panel is
+    /// the popover's shape (macOS 15 and later; on 26 the system glass stays regardless).
     @ViewBuilder
-    func windowBackgroundCleared() -> some View {
-        if #available(macOS 15, *) {
+    func windowBackgroundCleared(_ cleared: Bool) -> some View {
+        if cleared, #available(macOS 15, *) {
             containerBackground(.clear, for: .window)
         } else {
             self
