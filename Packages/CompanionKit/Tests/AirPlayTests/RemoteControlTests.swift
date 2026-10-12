@@ -60,7 +60,12 @@ private let identity = AirPlayIdentity(
         defer { server.stop() }
         let session = AirPlayRemoteControl(endpoint: server.endpoint, credentials: server.clientCredentials, identity: identity)
         try await session.start()
-        try await Task.sleep(for: .milliseconds(4500))
+        // Feedback goes out every 2 s. Poll rather than sleep a fixed time, since CI runners
+        // can be slow enough to miss a tight window.
+        let deadline = ContinuousClock.now + .seconds(15)
+        while server.snapshot().feedbackCount < 2, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(100))
+        }
         #expect(server.snapshot().feedbackCount >= 2)
         await session.close()
     }
