@@ -19,10 +19,11 @@ It's free and open source. It talks to your Apple TV directly over your home net
 
 ## Features
 
-- **The whole remote:** clickpad with arrows and OK (swipe across it too), Back, Home, Play/Pause, and volume up and down.
+- **The whole remote:** clickpad with arrows and OK, Back, Home, Play/Pause, and volume up and down.
+- **Swipe like a Siri Remote:** swipe with two fingers on your trackpad over the clickpad to glide through menus and scrub through video.
 - **Keyboard control:** arrow keys, Return, Esc, Space and more while the remote is open, plus an optional global shortcut to open it from anywhere.
 - **Type on the TV:** fill in search and sign-in fields from your Mac's keyboard instead of pecking at an on-screen keyboard.
-- **Now playing:** title, show or artist, app, artwork and a live progress bar for whatever's on.
+- **Now playing:** title, show or artist, app, artwork and a live progress bar for whatever's on, with play/pause and skip buttons, and a progress bar you can drag to jump around.
 - **Power:** hold the power button to put the TV to sleep or wake it up.
 - **Several Apple TVs:** switch between them from the remote, and pick which one Clickr starts with.
 - **Looks at home on your Mac:** Liquid Glass on macOS 26 and later, and a classic dark look on macOS 14 and 15.
@@ -65,7 +66,7 @@ If you'd rather check the code yourself first, it's all here, and you can [build
 
 Shortly after the first launch, Clickr asks whether it should **check for updates automatically**, with a checkbox to **also install updates automatically**. With checks on, it asks GitHub about once a day whether there's a newer release. When there is:
 
-- **You'll see Update Available** at the top of the right-click menu. Choose it, then **Install and Restart**. Clickr downloads the new version, swaps itself out and reopens a few seconds later. Settings has the same button.
+- **You'll see Update Available** at the top of the right-click menu. Choose it to see what's new, then **Install and Restart**. Clickr downloads the new version, swaps itself out and reopens a few seconds later. Settings has the same button.
 - **With automatic installs on,** Clickr does that by itself in the background. It waits until you're not using it (the remote and Settings are closed) and then restarts into the new version.
 
 Every release is signed with a private key that only the release build has, and Clickr checks that signature before installing anything. A download that doesn't match is thrown away. You can change both settings anytime in Settings.
@@ -97,7 +98,8 @@ Typed the wrong code? The boxes give a little shake and your TV shows a fresh co
 
 Click the remote icon in the menu bar to open Clickr.
 
-- **Clickpad:** click the arrows, or click and drag across the pad to swipe. **OK** selects; hold it to long-press.
+- **Clickpad:** click the arrows, or click and drag across the pad to move one step. **OK** selects; hold it to long-press.
+- **Trackpad swiping:** with the pointer over the clickpad, swipe with two fingers on your trackpad the way you'd swipe on a Siri Remote's touch surface. Short flicks move one item and longer swipes glide, and in video players that support it, swiping sideways scrubs. You can turn this off in Settings.
 - **Back** goes back (it's the Menu button). **Home** goes to the Home screen; hold it to open Control Center on the TV.
 - **Play/Pause** does what it says.
 - **Volume:** click **+** or **-**, or hold to keep going. This works if your Apple TV is set up to control your TV's or receiver's volume.
@@ -108,6 +110,8 @@ Click the remote icon in the menu bar to open Clickr.
 ### Now playing
 
 When something is playing, a card appears at the top showing the title, who it's by or which show it's from, the app, artwork and a progress bar. It hides itself when nothing is playing.
+
+Under the progress bar are the time played and the time left, and buttons for whatever the app supports: play/pause, plus skip back and forward (most video apps, using the app's own skip length, like 10 or 15 seconds) or previous and next track (music apps). Click or drag along the progress bar to jump to another spot, if the app allows seeking. You can hide the controls in Settings.
 
 Artwork comes from the app that's playing. Many apps (like Spotify and Apple's TV app) share it; some (like YouTube) don't, and you'll see a simple play symbol instead.
 
@@ -132,19 +136,28 @@ Right-click (or Control-click) the menu bar icon for **Settings…** and **Quit 
 
 ## Settings
 
-Right-click the menu bar icon and choose **Settings…**.
+Right-click the menu bar icon and choose **Settings…**. It has four tabs.
 
 <p align="center">
-  <img src="docs/images/settings.png" width="480" alt="Clickr's Settings window">
+  <img src="docs/images/settings.png" width="480" alt="Clickr's Settings window, on the Remote tab">
 </p>
 
+**General**
 - **Launch at login:** start Clickr when you log in.
-- **Show the keyboard hint:** show or hide the shortcut reminder at the bottom of the remote.
 - **Hide the menu bar icon when no Apple TV is found:** keeps your menu bar tidy when you're away from home. While it's hidden, open Clickr again from Applications to get back to Settings.
+
+**Remote**
+- **Show playback controls:** the play/pause and skip buttons on the now playing card, and dragging its progress bar. On by default.
+- **Swipe on the clickpad:** two-finger trackpad swiping over the clickpad. On by default.
+- **Show the keyboard hint:** show or hide the shortcut reminder at the bottom of the remote.
+- **Open the remote:** record a global keyboard shortcut (it needs ⌘, ⌥ or ⌃).
+
+**Apple TVs**
 - **Default Apple TV:** start with the TV you used last, or always a specific one.
 - **Paired Apple TVs:** see which TVs Clickr is paired with, and **Forget** one if you want to.
-- **Open the remote:** record a global keyboard shortcut (it needs ⌘, ⌥ or ⌃).
-- **Updates:** turn automatic update checks and automatic installs on or off, see whether you're up to date, check now, or install a new version.
+
+**Updates**
+- Turn automatic update checks and automatic installs on or off, see whether you're up to date, check now, or install a new version. When an update is available, the alert shows what's new in it.
 
 ## On macOS 14 and 15
 
@@ -200,8 +213,8 @@ Clickr speaks Apple's **Companion** protocol, the same one the iPhone's Remote u
 
 - **Pairing** uses HomeKit-style pair-setup: SRP-6a with a 3072-bit group and SHA-512 to prove both sides know the code, then an exchange of long-term Ed25519 keys.
 - **Every connection** starts with pair-verify (X25519 key agreement plus Ed25519 signatures), after which every message is encrypted with ChaCha20-Poly1305.
-- **Messages** are encoded in OPACK, Apple's compact binary format. Button presses are HID commands; typing uses Apple's remote text input archives.
-- **Now playing** comes over a second connection: an AirPlay 2 remote-control session that tunnels MediaRemote (MRP) protobuf messages. The TV accepts the same pairing, so there's no second code.
+- **Messages** are encoded in OPACK, Apple's compact binary format. Button presses are HID commands, swipes are touch events on a virtual 1000 × 1000 touch surface, and typing uses Apple's remote text input archives.
+- **Now playing** comes over a second connection: an AirPlay 2 remote-control session that tunnels MediaRemote (MRP) protobuf messages. The playback controls are MRP commands on the same connection, and the TV says which ones the playing app supports. The TV accepts the same pairing, so there's no second code.
 
 Everything is written from scratch in Swift using only Apple's frameworks (SwiftUI, Network, CryptoKit, Security). There are no third-party packages. The protocol work lives in a separate Swift package, `CompanionKit`, which has no UI code and is covered by unit tests.
 
