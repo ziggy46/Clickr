@@ -27,7 +27,7 @@ It's free and open source. It talks to your Apple TV directly over your home net
 - **Several Apple TVs:** switch between them from the remote, and pick which one Clickr starts with.
 - **Looks at home on your Mac:** Liquid Glass on macOS 26 and later, and a classic dark look on macOS 14 and 15.
 - **Quick and private:** connects directly over your home network and keeps its pairing key in your Mac's Keychain.
-- **Update checks:** optionally checks GitHub once a day and tells you when a new version is out.
+- **Updates itself:** optionally checks GitHub once a day, and can install new versions for you (each one is signature checked first).
 
 ## Requirements
 
@@ -37,11 +37,13 @@ It's free and open source. It talks to your Apple TV directly over your home net
 
 ## Installing
 
-1. Download the latest release from the [Releases](../../releases) page. There are two zips:
-   - **Clickr-x.y.z-universal.zip** runs on every Mac (Apple silicon and Intel). Pick this one if you're not sure.
-   - **Clickr-x.y.z-arm64.zip** is a smaller download for Apple silicon Macs (M1 and later) only.
-2. Unzip it and drag **Clickr** into your **Applications** folder.
-3. Open Clickr. A remote icon appears in your menu bar (Clickr has no Dock icon).
+1. Download the latest release from the [Releases](../../releases) page. There are two disk images:
+   - **Clickr-x.y.z-universal.dmg** runs on every Mac (Apple silicon and Intel). Pick this one if you're not sure.
+   - **Clickr-x.y.z-arm64.dmg** is a smaller download for Apple silicon Macs (M1 and later) only.
+2. Open the disk image and drag **Clickr** onto the **Applications** folder next to it.
+3. Open Clickr from Applications. A remote icon appears in your menu bar (Clickr has no Dock icon).
+
+Keep Clickr in Applications (rather than running it straight from the disk image or Downloads) so it can update itself.
 
 ### "Apple could not verify Clickr…"
 
@@ -49,12 +51,26 @@ Clickr is a free hobby project, so it isn't signed with a paid Apple Developer I
 
 - **macOS 15 Sequoia and later:** click **Done** on the warning, then open **System Settings > Privacy & Security**, scroll down, and click **Open Anyway** next to the message about Clickr. Confirm, and Clickr opens.
 - **macOS 14 Sonoma:** right-click (or Control-click) Clickr in Applications, choose **Open**, then click **Open** again.
+- **Or, in Terminal** (any macOS version): this clears the "downloaded from the internet" flag that triggers the warning, after which Clickr opens normally.
+
+  ```bash
+  xattr -cr /Applications/Clickr.app
+  ```
+
+Updates that Clickr installs itself don't bring the warning back.
 
 If you'd rather check the code yourself first, it's all here, and you can [build it from source](#building-from-source).
 
-### Update checks
+### Updates
 
-Shortly after the first launch, Clickr asks whether it should **check for updates automatically**. If you say yes, it asks GitHub about once a day whether there's a newer release. When there is, you'll see **Update Available** at the top of the right-click menu and in Settings, and clicking it opens the release page so you can download it. Clickr never downloads or installs anything by itself.
+Shortly after the first launch, Clickr asks whether it should **check for updates automatically**, with a checkbox to **also install updates automatically**. With checks on, it asks GitHub about once a day whether there's a newer release. When there is:
+
+- **You'll see Update Available** at the top of the right-click menu. Choose it, then **Install and Restart**. Clickr downloads the new version, swaps itself out and reopens a few seconds later. Settings has the same button.
+- **With automatic installs on,** Clickr does that by itself in the background. It waits until you're not using it (the remote and Settings are closed) and then restarts into the new version.
+
+Every release is signed with a private key that only the release build has, and Clickr checks that signature before installing anything. A download that doesn't match is thrown away. You can change both settings anytime in Settings.
+
+Updating from 0.1.x? Those versions can only point you to the download, so install 0.2.0 by hand once. From then on Clickr updates itself, and it keeps your settings and pairing.
 
 ### Allow local network access
 
@@ -112,7 +128,7 @@ You can also set a **global shortcut** in Settings to open the remote from any a
 
 ### The right-click menu
 
-Right-click (or Control-click) the menu bar icon for **Settings…** and **Quit Clickr**. When a new version is out, **Update Available** shows up there too.
+Right-click (or Control-click) the menu bar icon for **Settings…** and **Quit Clickr**. When a new version is out, **Update Available** shows up there too, and lets you install it.
 
 ## Settings
 
@@ -128,7 +144,7 @@ Right-click the menu bar icon and choose **Settings…**.
 - **Default Apple TV:** start with the TV you used last, or always a specific one.
 - **Paired Apple TVs:** see which TVs Clickr is paired with, and **Forget** one if you want to.
 - **Open the remote:** record a global keyboard shortcut (it needs ⌘, ⌥ or ⌃).
-- **Updates:** turn automatic update checks on or off, see whether you're up to date, check now, or download a new version.
+- **Updates:** turn automatic update checks and automatic installs on or off, see whether you're up to date, check now, or install a new version.
 
 ## On macOS 14 and 15
 
@@ -164,6 +180,9 @@ Clickr sends the same volume command as the Siri Remote, so it works when your A
 **"Couldn't reach GitHub" next to updates.**
 Your Mac was offline or GitHub was unreachable. Clickr tries again later, or you can click **Check Now**. The remote itself doesn't need the internet.
 
+**Settings says to move Clickr to Applications to install updates.**
+Clickr is running from the disk image or straight from Downloads, where macOS doesn't let it replace itself. Quit it, drag it into Applications, and open it from there. If it's already in Applications and still says it can't change that folder, your account may not be allowed to modify Applications. You can always download updates by hand from the release page.
+
 **How do I remove Clickr completely?**
 In Clickr's Settings, **Forget** each Apple TV, then quit Clickr and drag it to the Trash. On each Apple TV, remove Clickr under **Settings > Remotes and Devices**.
 
@@ -171,7 +190,7 @@ In Clickr's Settings, **Forget** each Apple TV, then quit Clickr and drag it to 
 
 Clickr talks to your Apple TV directly over your local network. It has no accounts, no analytics and no crash reporting.
 
-The only time it uses the internet is the optional update check. If you turn it on, Clickr asks GitHub's public API (`api.github.com`) about once a day for the latest Clickr release. Like any web request, that tells GitHub your IP address; the only thing about the app it sends is a "Clickr" User-Agent with the version number. Nothing about you, your Mac or your Apple TV is included. You can turn it off anytime in Settings.
+The only time it uses the internet is for updates, and only if you turn that on. Clickr asks GitHub's public API (`api.github.com`) about once a day for the latest Clickr release, and when you install an update (or have automatic installs on) it downloads the disk image and its signature from GitHub's release downloads. Like any web request, that tells GitHub your IP address; the only thing about the app it sends is a "Clickr" User-Agent with the version number on the check. Nothing about you, your Mac or your Apple TV is included. You can turn it off anytime in Settings.
 
 What Clickr stores: the pairing key for each Apple TV (in your Mac's Keychain) and a few preferences.
 
@@ -218,7 +237,9 @@ swift test
   .venv/bin/python scripts/gen_vectors.py
   ```
 - **Real-TV tests:** the `IntegrationTests` target runs against a real Apple TV when you set `CLICKR_TV_HOST` (and `CLICKR_TV_PORT`); otherwise it's skipped.
-- **Builds and releases:** `.github/workflows/build.yml` runs the tests and builds the arm64 and universal zips on every push and pull request. Releases are automatic: when a push to `main` carries a version (`MARKETING_VERSION` in `project.yml`) that hasn't been tagged yet, the workflow tags it `v<version>` and publishes a release with both zips and their SHA-256 checksums. To ship a new version, bump `MARKETING_VERSION` and push.
+- **Builds and releases:** `.github/workflows/build.yml` runs the tests and builds the arm64 and universal disk images on every push and pull request. Releases are automatic: when a push to `main` carries a version (`MARKETING_VERSION` in `project.yml`) that hasn't been tagged yet, the workflow tags it `v<version>` and publishes a release with both disk images, `SIGNATURES.txt` and SHA-256 checksums. To ship a new version, bump `MARKETING_VERSION` and push.
+- **Update signing:** each disk image is signed with an Ed25519 key (`scripts/update-signing.swift`). The private key lives only in the `UPDATE_SIGNING_KEY` repository secret, and the matching public key is `ClickrUpdatePublicKey` in `App/Info.plist`. The release job refuses to publish if the two don't match. Clickr checks the signature, the bundle identifier and that the version is newer before it installs anything. A fork that wants to publish its own updates needs its own key pair (`swift scripts/update-signing.swift generate-key <file>`).
+- **Testing an install locally:** debug builds accept `-ClickrUpdateFeed <folder>`, which treats a folder holding a signed `Clickr-<version>-<variant>.dmg` and `SIGNATURES.txt` as the latest release.
 - **Debug previews:** debug builds accept `-ClickrPreviewState`, `-ClickrPreviewDesign`, `-ClickrPreviewNowPlaying` and friends to show any screen with sample data. See `App/PreviewSupport.swift`.
 - **Design notes:** `BUILD_PLAN.md` is the original spec, with notes on every protocol detail that was checked or corrected along the way.
 

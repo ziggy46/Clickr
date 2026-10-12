@@ -2,13 +2,17 @@
 # releases it automatically.
 #
 # - Every push and pull request runs the CompanionKit tests and builds both variants. The
-#   zips are attached to the workflow run as artifacts.
+#   disk images are attached to the workflow run as artifacts.
 # - On a push to main, if there's no tag yet for the version in project.yml
 #   (MARKETING_VERSION), the workflow tags that commit as v<version> and publishes a GitHub
-#   release with both zips and their SHA-256 checksums. So to ship a new version, bump
-#   MARKETING_VERSION and push. Pushes that don't change the version only build and test.
+#   release with both disk images, their Ed25519 signatures (SIGNATURES.txt) and SHA-256
+#   checksums. So to ship a new version, bump MARKETING_VERSION and push. Pushes that don't
+#   change the version only build and test.
 #
-# The builds are ad-hoc signed (no Developer ID), like local builds.
+# The builds are ad-hoc signed (no Developer ID), like local builds. Clickr installs an
+# update only if its disk image is signed with the key in the UPDATE_SIGNING_KEY secret,
+# which matches ClickrUpdatePublicKey in App/Info.plist (see scripts/update-signing.swift).
+# Only the release job sees that secret.
 
 name: Build
 
@@ -113,42 +117,61 @@ jobs:
             lipo "$binary" -verify_arch "$arch"
           done
 
-      - name: Zip the app
+      - name: Check the signature
+        run: codesign --verify --deep --strict build/Build/Products/Release/Clickr.app
+
+      - name: Make the disk image
         run: |
-          ditto -c -k --sequesterRsrc --keepParent \
-            build/Build/Products/Release/Clickr.app \
-            "Clickr-${{ needs.plan.outputs.version }}-${{ matrix.variant }}.zip"
+          dmg="Clickr-${{ needs.plan.outputs.version }}-${{ matrix.variant }}.dmg"
+          scripts/make-dmg.sh build/Build/Products/Release/Clickr.app "$dmg"
+          hdiutil verify "$dmg"
 
       - uses: actions/upload-artifact@v4
         with:
           name: Clickr-${{ matrix.variant }}
-          path: Clickr-*.zip
+          path: Clickr-*.dmg
           if-no-files-found: error
 
   release:
     name: Release
     if: needs.plan.outputs.release == 'true'
     needs: [plan, test, build]
-    runs-on: ubuntu-latest
+    # macOS for CryptoKit, which the signing script uses.
+    runs-on: macos-26
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
+      - name: Sign the disk images
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: |
+          # Fails without the secret, or with a key that doesn't match the app's, so a
+          # release can't go out that Clickr would refuse to install.
+          public_key="$(/usr/libexec/PlistBuddy -c 'Print :ClickrUpdatePublicKey' App/Info.plist)"
+          cd dist
+          swift ../scripts/update-signing.swift sign "$public_key" Clickr-*.dmg > SIGNATURES.txt
+          cat SIGNATURES.txt
+
       - name: Add checksums
         working-directory: dist
-        run: sha256sum Clickr-*.zip > SHA256SUMS.txt && cat SHA256SUMS.txt
+        run: shasum -a 256 Clickr-*.dmg > SHA256SUMS.txt && cat SHA256SUMS.txt
 
       - name: Tag and publish the release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
+          sed "s/{{VERSION}}/$VERSION/g" .github/release-notes.md > notes.md
           gh release create "v$VERSION" dist/* \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Clickr $VERSION" \
+            --notes "$(cat notes.md)" \
             --generate-notes
