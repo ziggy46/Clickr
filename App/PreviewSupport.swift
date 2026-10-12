@@ -17,6 +17,7 @@ import SwiftUI
 /// - ClickrPreviewDevices: number of fake TVs (default 2)
 /// - ClickrPreviewPairingFailed: YES to show the wrong-PIN message
 /// - ClickrPreviewNowPlaying: YES to show a sample Now Playing card
+/// - ClickrPreviewOpenSettings: YES to open the Settings window at launch
 /// - ClickrPreviewWindow: YES to also show the popover in a plain window behind all other
 ///   windows, so it can be captured with `screencapture -l <id>` without opening the menu.
 struct PreviewOverrides {
@@ -27,6 +28,19 @@ struct PreviewOverrides {
     var increasedContrast: Bool
     var showsWindow: Bool
     var nowPlaying: NowPlaying?
+
+    /// Made-up cover art for the sample Now Playing card: a gradient with a few shapes.
+    static func sampleArtwork() -> NSImage {
+        NSImage(size: NSSize(width: 120, height: 120), flipped: false) { rect in
+            NSGradient(colors: [NSColor(red: 0.98, green: 0.45, blue: 0.27, alpha: 1),
+                                NSColor(red: 0.55, green: 0.18, blue: 0.62, alpha: 1)])?.draw(in: rect, angle: -60)
+            NSColor(white: 1, alpha: 0.85).setFill()
+            NSBezierPath(ovalIn: NSRect(x: 62, y: 58, width: 40, height: 40)).fill()
+            NSColor(white: 0, alpha: 0.25).setFill()
+            NSBezierPath(rect: NSRect(x: 0, y: 0, width: 120, height: 34)).fill()
+            return true
+        }
+    }
 
     static let current: PreviewOverrides? = {
         let defaults = UserDefaults.standard
@@ -56,7 +70,7 @@ struct PreviewOverrides {
             increasedContrast: defaults.string(forKey: "ClickrPreviewContrast") == "increased",
             showsWindow: defaults.bool(forKey: "ClickrPreviewWindow"),
             nowPlaying: defaults.bool(forKey: "ClickrPreviewNowPlaying") ? NowPlaying(
-                state: .playing, title: "Episode 3", artist: "Some Show", appName: "TV",
+                state: .playing, title: "Episode 3: The Long Way Home", artist: "Northern Lights", appName: "TV",
                 duration: 2700, elapsed: 1000, elapsedTimestamp: Date(), playbackRate: 1,
                 artworkAvailable: false, itemID: "preview", location: 0
             ) : nil

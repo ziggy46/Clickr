@@ -190,6 +190,7 @@ final class RemoteViewModel {
     }
 
     func refreshPairedDevices() {
+        guard !isPreview else { return }
         pairedDeviceIDs = (try? store.pairedDeviceIDs()) ?? []
     }
 
@@ -372,6 +373,9 @@ final class RemoteViewModel {
     private func apply(_ preview: PreviewOverrides) {
         isPreview = true
         nowPlaying = preview.nowPlaying
+        artwork = preview.nowPlaying == nil ? nil : PreviewOverrides.sampleArtwork()
+        // Pretend the second TV is paired, for Settings screenshots.
+        pairedDeviceIDs = preview.devices.dropFirst().prefix(1).map(\.id)
         devices = preview.devices
         selectedDeviceID = preview.devices.first?.id
         connectionState = preview.state

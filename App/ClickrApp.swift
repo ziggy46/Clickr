@@ -56,6 +56,9 @@ private struct MenuBarLabel: View {
                 StatusItemMenu.openSettings = { openSettings() }
                 #if DEBUG
                 PreviewWindow.showIfRequested(model: model)
+                if UserDefaults.standard.bool(forKey: "ClickrPreviewOpenSettings") {
+                    StatusItemMenu.showSettings()
+                }
                 #endif
             }
     }

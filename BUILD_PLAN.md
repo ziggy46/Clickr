@@ -29,7 +29,7 @@ A native macOS menu bar app that controls an Apple TV over the local network, li
 | Older macOS | Material fallback design (Section 5.3) |
 | Architectures | Apple Silicon + Intel (universal) |
 | App type | Menu bar only: `LSUIElement = YES`, no Dock icon, no main window |
-| Distribution | Direct download, Developer ID signed and notarized. **Not the Mac App Store.** |
+| Distribution | Direct download, Developer ID signed and notarized. **Not the Mac App Store.** *(Changed 2026-10-12: free, unsigned (ad-hoc signed) builds on GitHub Releases; no Developer ID or notarization. The README explains how to open an unsigned app.)* |
 | Sandbox | On, with the `com.apple.security.network.client` entitlement |
 
 **Info.plist keys**
@@ -246,7 +246,7 @@ actor AppleTVSession {
 | 8 | Full UI pass | Glass design on macOS 26 and fallback on 14/15 match Section 5 exactly; all icon states (5.1) wired to `ConnectionState`; multi-TV switcher works. **Built early on 2026-10-11 at the owner's request**, before Milestones 5 to 7. Until the session exists the UI runs on placeholder state (a found TV shows "Not connected"), and button presses only log. |
 | 9 | Text input (stretch) | Typing in "Type on the TV" fills a tvOS search field |
 | 10 | Now playing (stretch) | Card shows the real title, app and progress; hidden when nothing is playing |
-| 11 | Ship | Developer ID signing, notarization, `.dmg`; first-run Local Network prompt appears and works |
+| 11 | Ship | Developer ID signing, notarization, `.dmg`; first-run Local Network prompt appears and works. *(Changed 2026-10-12: an unsigned Release build zipped for GitHub Releases; the README covers Gatekeeper's "Open Anyway" step. The repo is public, MIT licensed, with no personal names or emails.)* |
 
 ---
 
