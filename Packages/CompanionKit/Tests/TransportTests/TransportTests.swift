@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import TestSupport
 import Testing
 @testable import Transport
 
@@ -137,18 +138,5 @@ private func frames(_ count: Int, from connection: CompanionConnection, timeout:
         await #expect(throws: CompanionConnection.ConnectionError.notConnected) {
             try await connection.send(Frame(type: .noOp))
         }
-    }
-}
-
-extension Data {
-    init(hex: String) {
-        var bytes: [UInt8] = []
-        var index = hex.startIndex
-        while index < hex.endIndex {
-            let next = hex.index(index, offsetBy: 2)
-            bytes.append(UInt8(hex[index..<next], radix: 16)!)
-            index = next
-        }
-        self.init(bytes)
     }
 }
