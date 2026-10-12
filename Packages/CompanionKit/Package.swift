@@ -27,8 +27,8 @@ let package = Package(
 
         .testTarget(name: "OPACKTests", dependencies: ["OPACK", "TestSupport"], resources: [.copy("Vectors")]),
         .testTarget(name: "TLV8Tests", dependencies: ["TLV8", "TestSupport"], resources: [.copy("Vectors")]),
-        .testTarget(name: "BigIntTests", dependencies: ["BigInt"]),
-        .testTarget(name: "SRPTests", dependencies: ["SRP"]),
+        .testTarget(name: "BigIntTests", dependencies: ["BigInt", "TestSupport"], resources: [.copy("Vectors")]),
+        .testTarget(name: "SRPTests", dependencies: ["SRP", "BigInt", "TestSupport"], resources: [.copy("Vectors")]),
         .testTarget(name: "PairingTests", dependencies: ["Pairing"]),
         .testTarget(name: "TransportTests", dependencies: ["Transport", "TestSupport"]),
         .testTarget(name: "DiscoveryTests", dependencies: ["Discovery"]),
