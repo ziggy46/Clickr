@@ -433,7 +433,7 @@ Key repeat on arrows sends repeated presses.
 Not part of the original design. A standard macOS Settings window (SwiftUI `Settings` scene, grouped form, system styling), opened from **Settings… (⌘,)** in the icon's right-click menu, above Quit.
 
 - **Launch at login:** toggle using `SMAppService.mainApp`. If macOS needs approval, a note points to System Settings > General > Login Items.
-- **Default Apple TV:** "Last used" (the default) or a specific TV. Applied at launch.
+- **Default Apple TV:** "Last used" (the default) or one of the paired TVs. Applied at launch. Only paired TVs are offered, so the default can never open on a pairing screen.
 - **Paired Apple TVs:** every TV with a pairing key, each with **Forget…** behind a confirmation. Forgetting removes the Keychain item only; the TV keeps its "Clickr" entry until it's removed under Remotes and Devices on the TV, which the confirmation says.
 - **Show the keyboard hint:** shows or hides the footer hint (5.2 item 7). On by default.
 - **Hide the menu bar icon when no Apple TV is found:** off by default. Uses `MenuBarExtra(isInserted:)`; the icon goes away after 5 s with no Apple TV on the network and comes back as soon as one appears. Opening Clickr again while it runs shows Settings, which is the way back while the icon is hidden.

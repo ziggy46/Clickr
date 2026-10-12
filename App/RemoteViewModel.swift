@@ -154,13 +154,6 @@ final class RemoteViewModel {
 
     // MARK: - Settings
 
-    /// Every TV Settings can offer: the ones on the network plus paired ones that aren't.
-    var knownDeviceIDs: [String] {
-        var ids = devices.map(\.id)
-        for id in pairedDeviceIDs where !ids.contains(id) { ids.append(id) }
-        return ids
-    }
-
     func name(for deviceID: String) -> String {
         devices.first { $0.id == deviceID }?.name ?? deviceNames[deviceID] ?? "Apple TV"
     }

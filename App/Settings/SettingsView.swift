@@ -34,7 +34,7 @@ struct SettingsView: View {
             Section("Apple TV") {
                 Picker("Default Apple TV", selection: defaultDevice) {
                     Text("Last used").tag(String?.none)
-                    ForEach(model.knownDeviceIDs, id: \.self) { id in
+                    ForEach(model.pairedDeviceIDs, id: \.self) { id in
                         Text(model.name(for: id)).tag(String?.some(id))
                     }
                 }
