@@ -88,8 +88,10 @@ final class RemoteViewModel {
             rememberNames(of: devices)
             trackWhetherAnyTVIsAround()
             // Until the user chooses, follow the preferred TV, so a paired TV that shows up
-            // a moment after an unpaired one still wins.
-            if selectionIsAutomatic, let preferred = preferredDevice(in: devices) {
+            // a moment after an unpaired one still wins. Never move off a paired TV to an
+            // unpaired one, though: a sleeping TV can drop out of discovery for a moment.
+            if selectionIsAutomatic, let preferred = preferredDevice(in: devices),
+               selectedDeviceID == nil || isPaired(preferred.id) || !isPaired(selectedDeviceID!) {
                 selectedDeviceID = preferred.id
             }
             if let current = devices.first(where: { $0.id == selectedDeviceID }) {
@@ -111,7 +113,11 @@ final class RemoteViewModel {
 
     /// With nothing selected yet, prefer a TV we're already paired with.
     private func preferredDevice(in devices: [DiscoveredDevice]) -> DiscoveredDevice? {
-        devices.first { ((try? store.credentials(for: $0.id)) ?? nil) != nil } ?? devices.first
+        devices.first { isPaired($0.id) } ?? devices.first
+    }
+
+    private func isPaired(_ deviceID: String) -> Bool {
+        pairedDeviceIDs.contains(deviceID)
     }
 
     private var selectedSession: AppleTVSession? {
@@ -142,7 +148,9 @@ final class RemoteViewModel {
         updatesTask = Task { [weak self] in
             for await update in await session.updates {
                 switch update {
-                case .asleep(let asleep): self?.isAsleep = asleep
+                case .asleep(let asleep):
+                    self?.log.info("TV reports \(asleep ? "asleep" : "awake", privacy: .public)")
+                    self?.isAsleep = asleep
                 case .keyboardShown(let text): self?.receivedFromTV(text)
                 case .keyboardHidden: self?.receivedFromTV("")
                 }
@@ -211,9 +219,11 @@ final class RemoteViewModel {
     func togglePower() {
         guard let session = selectedSession else { return }
         let wake = isAsleep
+        log.info("Power held: sending \(wake ? "Wake" : "Sleep", privacy: .public)")
         Task {
             do {
                 try await session.setPower(on: wake)
+                log.info("TV accepted \(wake ? "Wake" : "Sleep", privacy: .public)")
             } catch {
                 log.error("Power failed: \(String(describing: error), privacy: .public)")
             }

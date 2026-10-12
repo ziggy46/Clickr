@@ -196,7 +196,7 @@ public actor AppleTVSession {
                 publish(.asleep(state == 1))
             }
         } catch {
-            log.debug("FetchAttentionState failed: \(String(describing: error), privacy: .public)")
+            log.info("FetchAttentionState failed: \(String(describing: error), privacy: .public)")
         }
         for event in ["SystemStatus", "TVSystemStatus"] {
             try? await sendEvent("_interest", ["_regEvents": [.string(event)]])
