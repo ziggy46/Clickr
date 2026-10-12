@@ -45,6 +45,17 @@ extension Color {
         )
     }
 
+    /// The system accent color lightened for text on the dark remote, the way the original
+    /// light blue (#A9D2FF) sat on blue. Mixing needs macOS 15; before that it's the plain
+    /// accent color.
+    static var accentText: Color {
+        if #available(macOS 15, *) {
+            Color.accentColor.mix(with: .white, by: 0.6)
+        } else {
+            Color.accentColor
+        }
+    }
+
     static let statusConnected = Color(hex: 0x30D158)
     static let statusConnecting = Color(hex: 0x8E8E93)
     static let statusDisconnected = Color(hex: 0xFF453A)
