@@ -23,6 +23,14 @@ final class RemoteViewModel {
     /// Whether the selected TV says it's asleep.
     private(set) var isAsleep = false
 
+    /// True from a power hold until the TV reports its new state (or gives up after 5 s).
+    private(set) var powerChangePending = false
+    /// Bumped when a power change is confirmed or fails, for the button's animations.
+    private(set) var powerConfirmations = 0
+    private(set) var powerFailures = 0
+    private var expectedAsleep: Bool?
+    private var powerTimeout: Task<Void, Never>?
+
     /// The "Type on the TV" text. Follows the TV: emptied when its keyboard goes away,
     /// filled with what's already there when a text field gains focus.
     var tvText = ""
@@ -151,6 +159,7 @@ final class RemoteViewModel {
                 case .asleep(let asleep):
                     self?.log.info("TV reports \(asleep ? "asleep" : "awake", privacy: .public)")
                     self?.isAsleep = asleep
+                    self?.confirmPowerChange(asleep: asleep)
                 case .keyboardShown(let text): self?.receivedFromTV(text)
                 case .keyboardHidden: self?.receivedFromTV("")
                 }
@@ -215,19 +224,43 @@ final class RemoteViewModel {
         }
     }
 
-    /// Sleeps the TV, or wakes it if it says it's asleep.
+    /// Sleeps the TV, or wakes it if it says it's asleep. The change counts as done when the
+    /// TV reports its new state, not when it accepts the command (that's instant).
     func togglePower() {
-        guard let session = selectedSession else { return }
+        guard let session = selectedSession, !powerChangePending else { return }
         let wake = isAsleep
+        powerChangePending = true
+        expectedAsleep = !wake
         log.info("Power held: sending \(wake ? "Wake" : "Sleep", privacy: .public)")
+
+        powerTimeout = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
+            self?.log.error("TV didn't report the power change in time")
+            self?.finishPowerChange(succeeded: false)
+        }
         Task {
             do {
                 try await session.setPower(on: wake)
                 log.info("TV accepted \(wake ? "Wake" : "Sleep", privacy: .public)")
             } catch {
                 log.error("Power failed: \(String(describing: error), privacy: .public)")
+                finishPowerChange(succeeded: false)
             }
         }
+    }
+
+    private func confirmPowerChange(asleep: Bool) {
+        guard powerChangePending, asleep == expectedAsleep else { return }
+        finishPowerChange(succeeded: true)
+    }
+
+    private func finishPowerChange(succeeded: Bool) {
+        guard powerChangePending else { return }
+        powerChangePending = false
+        expectedAsleep = nil
+        powerTimeout?.cancel()
+        if succeeded { powerConfirmations += 1 } else { powerFailures += 1 }
     }
 
     private func receivedFromTV(_ text: String) {
