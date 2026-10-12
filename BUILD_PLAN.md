@@ -1,4 +1,4 @@
-# Clickr — Build Plan
+# Clickr: Build Plan
 
 A native macOS menu bar app that controls an Apple TV over the local network, like the Remote in Control Center on iPhone.
 
@@ -254,7 +254,7 @@ Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
 
 **Known limitation:** a template image can't keep a colored dot. Try rendering the label as a composited non-template `NSImage` with the dot in system blue. If that tints badly in either menu bar appearance, fall back to a monochrome dot baked into a second template asset (`RemoteIconBadge`). Report which one shipped.
 
-### 5.2 Popover — Liquid Glass (macOS 26+)
+### 5.2 Popover: Liquid Glass (macOS 26+)
 
 **Container**
 
@@ -326,7 +326,7 @@ Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
 - **11 regular**, white 78%, centered, line spacing ≈ 1.45.
 - Text: "Keyboard works too: arrow keys move, Return selects, Esc goes back, Space plays or pauses."
 
-### 5.3 Popover — material fallback (macOS 14–15)
+### 5.3 Popover: material fallback (macOS 14–15)
 
 The same structure and order as 5.2, with these differences:
 
@@ -451,3 +451,4 @@ Key repeat on arrows sends repeated presses.
   - Matched the plan: frame types, HID codes, SRP username, `_pd`/`_pwTy`, envelope keys, `_sessionStart`/`_srvT`, `ClientEncrypt-main`/`ServerEncrypt-main`, AAD = frame header.
   - Corrected: transport nonce layout (12-byte little-endian counter, zero padding at the end).
   - Added: empty HKDF salt for session keys; pairing salt/info strings; fixed pairing nonces; tag counted in frame length; `_auTy: 4`; `_systemInfo` / `TVRCSessionStart`; Companion TXT keys and the Apple TV filter.
+- **Milestone 1** acceptance confirmed on a real Apple TV: listed by name within 3 s, other Companion devices filtered out, removed after unplugging.
