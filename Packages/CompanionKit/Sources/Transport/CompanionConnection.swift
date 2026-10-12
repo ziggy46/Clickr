@@ -4,8 +4,8 @@ import os
 
 /// A TCP connection to an Apple TV's Companion port that sends and receives whole frames.
 ///
-/// Encryption sits on top of this (Milestone 6): the cipher encrypts payloads before `send`
-/// and decrypts what comes out of `frames`, rebuilding the header for the AAD.
+/// After pair-verify, `enableEncryption` turns on the frame cipher: `send` encrypts payloads
+/// and `frames` yields decrypted ones. A frame that fails to decrypt closes the connection.
 public actor CompanionConnection {
     public enum ConnectionError: Error, Equatable {
         case alreadyStarted
@@ -13,6 +13,7 @@ public actor CompanionConnection {
         case payloadTooLarge(Int)
         case failed(String)
         case cancelled
+        case decryptionFailed
     }
 
     nonisolated let queue = DispatchSerialQueue(label: "Clickr.CompanionConnection")
@@ -29,11 +30,17 @@ public actor CompanionConnection {
     private var connectContinuation: CheckedContinuation<Void, Error>?
     private var started = false
     private var isReady = false
+    private var cipher: FrameCipher?
 
     public init(endpoint: NWEndpoint, connectTimeout: Int = 5) {
         let tcp = NWProtocolTCP.Options()
         tcp.noDelay = true
         tcp.connectionTimeout = connectTimeout
+        // Notice a TV that went away (unplugged, Wi-Fi dropped) within about half a minute.
+        tcp.enableKeepalive = true
+        tcp.keepaliveIdle = 15
+        tcp.keepaliveInterval = 5
+        tcp.keepaliveCount = 3
         let parameters = NWParameters(tls: nil, tcp: tcp)
         parameters.includePeerToPeer = false
         let framer = NWProtocolFramer.Options(definition: CompanionFramer.definition)
@@ -57,17 +64,28 @@ public actor CompanionConnection {
         }
     }
 
+    /// Encrypts every frame from here on, in both directions.
+    public func enableEncryption(outputKey: Data, inputKey: Data) {
+        cipher = FrameCipher(outputKey: outputKey, inputKey: inputKey)
+    }
+
     public func send(_ frame: Frame) async throws {
         guard isReady else { throw ConnectionError.notConnected }
-        guard frame.payload.count <= FrameHeader.maxPayloadLength else {
+        var payload = frame.payload
+        if cipher != nil {
+            payload = try cipher!.seal(payload, type: frame.type)
+        }
+        guard payload.count <= FrameHeader.maxPayloadLength else {
             throw ConnectionError.payloadTooLarge(frame.payload.count)
         }
 
+        // Sealing and handing the frame to NWConnection happen without a suspension in
+        // between, so nonces go out in counter order.
         let message = NWProtocolFramer.Message(frameType: frame.type)
         let context = NWConnection.ContentContext(identifier: "CompanionFrame", metadata: [message])
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             connection.send(
-                content: frame.payload,
+                content: payload,
                 contentContext: context,
                 isComplete: true,
                 completion: .contentProcessed { error in
@@ -129,7 +147,16 @@ public actor CompanionConnection {
             return
         }
         if let message = context?.protocolMetadata(definition: CompanionFramer.definition) as? NWProtocolFramer.Message {
-            framesContinuation.yield(Frame(type: message.frameType, payload: content ?? Data()))
+            var payload = content ?? Data()
+            if cipher != nil {
+                do {
+                    payload = try cipher!.open(payload, type: message.frameType)
+                } catch {
+                    fail(.decryptionFailed)
+                    return
+                }
+            }
+            framesContinuation.yield(Frame(type: message.frameType, payload: payload))
         } else if context?.isFinal == true {
             // The TV closed its side.
             connection.cancel()

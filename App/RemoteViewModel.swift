@@ -103,17 +103,26 @@ final class RemoteViewModel {
                 self?.connectionState = state
             }
         }
+        // Paired TVs connect right away; an unpaired one waits for the pairing view.
+        Task { await session.connect() }
     }
 
     // MARK: - Remote actions
-    // Milestone 6 connects with pair-verify and sends these to the TV. For now they only log.
 
     func retry() {
-        log.debug("Retry tapped")
+        guard let session = selectedSession else { return }
+        Task { await session.connect() }
     }
 
     func press(_ button: RemoteButton, hold: Bool = false) {
-        log.debug("Pressed \(String(describing: button), privacy: .public)\(hold ? " (hold)" : "", privacy: .public)")
+        guard let session = selectedSession else { return }
+        Task {
+            do {
+                try await session.press(button, hold: hold)
+            } catch {
+                log.error("Press \(String(describing: button), privacy: .public) failed: \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     // MARK: - Pairing
@@ -144,6 +153,7 @@ final class RemoteViewModel {
         do {
             try await session.finishPairing(pin: pin)
             pairingMessage = nil
+            await session.connect()
             return true
         } catch PairSetup.PairingError.wrongPIN {
             pairingMessage = "That code didn't match. Try again."

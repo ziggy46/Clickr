@@ -31,7 +31,7 @@ private func firstState(_ session: AppleTVSession) async -> ConnectionState? {
         #expect(credentials.theirID == tv.identifier)
         #expect(credentials.theirLTPK == tv.signingKey.publicKey.rawRepresentation)
         #expect(credentials.ourLTSK.count == 32)
-        #expect(tv.pairedName == "Clickr")
+        #expect(tv.snapshot().name == "Clickr")
         #expect(await firstState(session) == .disconnected)
     }
 

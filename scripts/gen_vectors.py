@@ -527,6 +527,77 @@ def pairing_vectors():
     }
 
 
+# Pair-verify and the encrypted transport ----------------------------------------
+
+
+def verify_vectors():
+    """pyatv's pair-verify (verify1/verify2) with fixed keys, plus frames encrypted the way
+    its CompanionConnection does after pair-verify."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+    from pyatv.auth.hap_pairing import HapCredentials
+    from pyatv.auth.hap_srp import SRPAuthHandler, hkdf_expand
+    from pyatv.support import chacha20
+
+    raw, public = serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    client_ltsk = fixed_bytes(31, 32)
+    client_id = b"6F1B3C2A-9D4E-4F5A-8B7C-0D1E2F3A4B5C"
+    atv_key = Ed25519PrivateKey.from_private_bytes(fixed_bytes(32, 32))
+    atv_ltpk = atv_key.public_key().public_bytes(raw, public)
+    atv_id = b"AA:BB:CC:DD:EE:FF"
+    client_eph = X25519PrivateKey.from_private_bytes(fixed_bytes(33, 32))
+    client_eph_public = client_eph.public_key().public_bytes(raw, public)
+    atv_eph = X25519PrivateKey.from_private_bytes(fixed_bytes(34, 32))
+    atv_eph_public = atv_eph.public_key().public_bytes(raw, public)
+
+    handler = SRPAuthHandler()
+    handler.initialize()
+    handler._verify_private = client_eph
+    handler._public_bytes = client_eph_public
+    credentials = HapCredentials(atv_ltpk, client_ltsk, atv_id, client_id)
+
+    # The TV's M2.
+    shared = atv_eph.exchange(X25519PrivateKey.from_private_bytes(fixed_bytes(33, 32)).public_key())
+    session_key = hkdf_expand("Pair-Verify-Encrypt-Salt", "Pair-Verify-Encrypt-Info", shared)
+    signature = atv_key.sign(atv_eph_public + atv_id + client_eph_public)
+    m2 = chacha20.Chacha20Cipher8byteNonce(session_key, session_key).encrypt(
+        write_tlv({TlvValue.Identifier: atv_id, TlvValue.Signature: signature}), nonce=b"PV-Msg02")
+
+    m3 = handler.verify1(credentials, atv_eph_public, m2)
+    output_key, input_key = handler.verify2("", "ClientEncrypt-main", "ServerEncrypt-main")
+
+    # Frames as CompanionConnection sends them, and as the TV would send them back.
+    def frames(out_key, in_key):
+        cipher = chacha20.Chacha20Cipher(out_key, in_key, nonce_length=12)
+        result = []
+        for frame_type, payload in [(8, opack.pack({"_i": "_hidC", "_t": 2, "_c": {"_hBtS": 1, "_hidC": 6}, "_x": 7})),
+                                    (8, fixed_bytes(40, 300)), (1, b""), (8, b"\x01")]:
+            length = len(payload) + (16 if payload else 0)
+            header = bytes([frame_type]) + length.to_bytes(3, "big")
+            body = cipher.encrypt(payload, aad=header) if payload else b""
+            result.append({"type": frame_type, "payload": payload.hex(), "wire": (header + body).hex()})
+        return result
+
+    return {
+        "client_ltsk": client_ltsk.hex(),
+        "client_id": client_id.decode(),
+        "atv_ltpk": atv_ltpk.hex(),
+        "atv_id": atv_id.decode(),
+        "client_eph_private": fixed_bytes(33, 32).hex(),
+        "client_eph_public": client_eph_public.hex(),
+        "atv_eph_public": atv_eph_public.hex(),
+        "shared_secret": shared.hex(),
+        "verify_key": session_key.hex(),
+        "m2_encrypted": m2.hex(),
+        "m3_encrypted": m3.hex(),
+        "output_key": output_key.hex(),
+        "input_key": input_key.hex(),
+        "frames_to_tv": frames(output_key, input_key),
+        "frames_from_tv": frames(input_key, output_key),
+    }
+
+
 def write(path: Path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n")
@@ -539,3 +610,8 @@ if __name__ == "__main__":
     write(TESTS / "BigIntTests" / "Vectors" / "bigint.json", bigint_vectors())
     write(TESTS / "SRPTests" / "Vectors" / "srp.json", srp_vectors())
     write(TESTS / "PairingTests" / "Vectors" / "pairing.json", pairing_vectors())
+    verify = verify_vectors()
+    frames = {key: verify.pop(key) for key in ("frames_to_tv", "frames_from_tv")}
+    frames.update(output_key=verify["output_key"], input_key=verify["input_key"])
+    write(TESTS / "PairingTests" / "Vectors" / "verify.json", verify)
+    write(TESTS / "TransportTests" / "Vectors" / "frames.json", frames)

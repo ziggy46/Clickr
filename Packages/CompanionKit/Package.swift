@@ -30,7 +30,7 @@ let package = Package(
         .testTarget(name: "BigIntTests", dependencies: ["BigInt", "TestSupport"], resources: [.copy("Vectors")]),
         .testTarget(name: "SRPTests", dependencies: ["SRP", "BigInt", "TestSupport"], resources: [.copy("Vectors")]),
         .testTarget(name: "PairingTests", dependencies: ["Pairing", "SRP", "OPACK", "TLV8", "TestSupport"], resources: [.copy("Vectors")]),
-        .testTarget(name: "TransportTests", dependencies: ["Transport", "TestSupport"]),
+        .testTarget(name: "TransportTests", dependencies: ["Transport", "TestSupport"], resources: [.copy("Vectors")]),
         .testTarget(name: "DiscoveryTests", dependencies: ["Discovery"]),
         .testTarget(name: "StoreTests", dependencies: ["Store"]),
         .testTarget(name: "SessionTests", dependencies: ["Session", "Pairing", "Store", "Discovery", "OPACK", "TLV8", "Transport", "TestSupport"]),
