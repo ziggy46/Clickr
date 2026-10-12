@@ -114,6 +114,7 @@ final class UpdateController {
                 status = .available(release)
                 StatusItemMenu.availableUpdate = release
                 installAutomaticallyIfPossible()
+                if UserDefaults.standard.bool(forKey: "ClickrShowUpdateAlert") { presentAvailableUpdate() }
                 return
             }
             #endif
@@ -143,6 +144,9 @@ final class UpdateController {
         NSApp.activate()
         let alert = NSAlert()
         alert.messageText = "Clickr \(release.version) is available"
+        if let notes = release.whatsNew {
+            alert.accessoryView = Self.notesView(notes)
+        }
         if canInstallAvailableUpdate {
             alert.informativeText = "You have \(currentVersion). Clickr will restart to finish installing."
             alert.addButton(withTitle: "Install and Restart")
@@ -172,6 +176,58 @@ final class UpdateController {
         Task {
             if let update = await prepare(release) { restart(into: update) }
         }
+    }
+
+    /// The release notes in a small scrolling box under the alert's text. GitHub's notes are
+    /// simple markdown: headings and bullet lists of changes, with links.
+    private static func notesView(_ markdown: String) -> NSView {
+        let size = NSFont.smallSystemFontSize
+        let text = NSMutableAttributedString()
+        for line in markdown.components(separatedBy: "\n") {
+            var content = line
+            var font = NSFont.systemFont(ofSize: size)
+            var prefix = ""
+            if line.hasPrefix("#") {
+                content = line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)
+                font = .boldSystemFont(ofSize: size)
+            } else if line.hasPrefix("* ") || line.hasPrefix("- ") {
+                content = String(line.dropFirst(2))
+                prefix = "•  "
+            }
+            let inline = (try? AttributedString(markdown: content, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+                ?? AttributedString(content)
+            let part = NSMutableAttributedString(string: prefix)
+            part.append(NSAttributedString(inline))
+            part.append(NSAttributedString(string: "\n"))
+            let whole = NSRange(location: 0, length: part.length)
+            part.addAttribute(.font, value: font, range: whole)
+            part.addAttribute(.foregroundColor, value: NSColor.labelColor, range: whole)
+            if !prefix.isEmpty {
+                // Wrapped lines line up with the text, not the bullet.
+                let style = NSMutableParagraphStyle()
+                style.headIndent = (prefix as NSString).size(withAttributes: [.font: font]).width
+                part.addAttribute(.paragraphStyle, value: style, range: whole)
+            }
+            text.append(part)
+        }
+
+        let width: CGFloat = 320
+        let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: width, height: 0))
+        textView.isEditable = false
+        textView.drawsBackground = false
+        textView.textContainerInset = NSSize(width: 4, height: 6)
+        textView.textStorage?.setAttributedString(text)
+        textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+        let used = textView.layoutManager?.usedRect(for: textView.textContainer!).height ?? 0
+        let height = min(max(used + 14, 40), 180)
+
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: width, height: height))
+        scroll.documentView = textView
+        scroll.hasVerticalScroller = used + 14 > height
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+        textView.frame.size.height = max(used + 14, height)
+        return scroll
     }
 
     private func installAutomaticallyIfPossible() {
@@ -262,7 +318,9 @@ final class UpdateController {
 
     #if DEBUG
     /// For testing installs without GitHub: `-ClickrUpdateFeed <folder>` treats a folder
-    /// holding Clickr-<version>-<variant>.dmg files and SIGNATURES.txt as the latest release.
+    /// holding Clickr-<version>-<variant>.dmg files and SIGNATURES.txt (and optionally
+    /// NOTES.md, the release notes) as the latest release. `-ClickrShowUpdateAlert YES`
+    /// opens the update alert as soon as it's found.
     private static func localTestRelease() -> Release? {
         guard let folder = UserDefaults.standard.string(forKey: "ClickrUpdateFeed") else { return nil }
         let url = URL(fileURLWithPath: folder, isDirectory: true)
@@ -271,7 +329,8 @@ final class UpdateController {
               let version = AppVersion(String(image.split(separator: "-")[1]))
         else { return nil }
         let assets = Dictionary(uniqueKeysWithValues: names.map { ($0, url.appending(path: $0)) })
-        return Release(version: version, name: nil, pageURL: url, assets: assets)
+        let notes = try? String(contentsOf: url.appending(path: "NOTES.md"), encoding: .utf8)
+        return Release(version: version, name: nil, pageURL: url, assets: assets, notes: notes)
     }
     #endif
 }
