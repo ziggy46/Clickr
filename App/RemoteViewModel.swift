@@ -68,6 +68,12 @@ final class RemoteViewModel {
     private var stateTask: Task<Void, Never>?
     private var updatesTask: Task<Void, Never>?
     private var pairingStart: Task<Void, Error>?
+    /// Stopping pairing runs on the sessions' actors. A new attempt waits for it, so a late
+    /// cancel can't close the connection the new attempt just opened.
+    private var pairingCancel: Task<Void, Never>?
+    /// The TV that was selected before the current one, so leaving the pairing view can go
+    /// back to it.
+    private var previousDeviceID: DiscoveredDevice.ID?
     private var isPreview = false
     private let log = Logger(subsystem: "com.ziggy46.clickr", category: "Remote")
 
@@ -119,6 +125,7 @@ final class RemoteViewModel {
     // MARK: - Devices and sessions
 
     func select(_ device: DiscoveredDevice) {
+        if device.id != selectedDeviceID { previousDeviceID = selectedDeviceID }
         selectionIsAutomatic = false
         selectedDeviceID = device.id
         lastSelectedDevice = device
@@ -322,12 +329,15 @@ final class RemoteViewModel {
     }
 
     private func startPairing() async {
-        guard let session = selectedSession else { return }
+        await pairingCancel?.value
+        guard !Task.isCancelled, let session = selectedSession else { return }
         let start = Task { try await session.beginPairing() }
         pairingStart = start
         do {
             try await start.value
         } catch {
+            // The user moved on to another TV or closed the popover.
+            if Task.isCancelled { return }
             log.error("Couldn't start pairing: \(String(describing: error), privacy: .public)")
             pairingMessage = "Couldn't reach \(selectedDevice?.name ?? "the Apple TV"). Close and try again."
         }
@@ -360,13 +370,30 @@ final class RemoteViewModel {
         return false
     }
 
-    /// Cancel button, or the popover closing: the TV takes the PIN off the screen. Stops
-    /// pairing on every TV, in case the selection moved while one was in progress.
-    func cancelPairing() {
+    /// Cancel button, or the popover closing: the TV takes the PIN off the screen. With no
+    /// device given, stops pairing on every TV, in case the selection moved while one was in
+    /// progress. Pass the TV being paired when another TV might be connecting, since this
+    /// also closes a connection that hasn't finished setting up.
+    func cancelPairing(on deviceID: DiscoveredDevice.ID? = nil) {
         pairingStart?.cancel()
-        for session in sessions.values {
-            Task { await session.cancelPairing() }
+        let sessions = sessions.filter { deviceID == nil || $0.key == deviceID }.map(\.value)
+        pairingCancel = Task {
+            for session in sessions { await session.cancelPairing() }
         }
+    }
+
+    /// Where the pairing view's Cancel button goes: the TV selected before this one, or
+    /// failing that any paired TV that's around. Nil when there's nowhere to go back to.
+    var deviceToReturnTo: DiscoveredDevice? {
+        let others = devices.filter { $0.id != selectedDeviceID }
+        return others.first { $0.id == previousDeviceID } ?? others.first { isPaired($0.id) }
+    }
+
+    /// Stops pairing with the selected TV and moves to another one from the pairing view.
+    func leavePairing(for device: DiscoveredDevice) {
+        cancelPairing(on: selectedDeviceID)
+        pairingMessage = nil
+        select(device)
     }
 
     #if DEBUG

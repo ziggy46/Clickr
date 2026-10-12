@@ -1,10 +1,11 @@
 import AppKit
+import Discovery
 import SwiftUI
 
 /// First-time pairing: the TV shows a code and the user types it here (Section 5.4).
 struct PairingView: View {
     let model: RemoteViewModel
-    let deviceName: String
+    let device: DiscoveredDevice
     @Environment(\.remoteTheme) private var theme
 
     @State private var digits = ""
@@ -18,7 +19,7 @@ struct PairingView: View {
         VStack(spacing: 16) {
             badge
 
-            Text("Pair with \(deviceName)")
+            Text("Pair with \(device.name)")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(theme.primaryText)
 
@@ -32,11 +33,15 @@ struct PairingView: View {
             pairButton
 
             Button {
-                model.cancelPairing()
-                // Close the popover; opening it again starts a new pairing.
-                NSApp.keyWindow?.close()
+                if let back = model.deviceToReturnTo {
+                    model.leavePairing(for: back)
+                } else {
+                    model.cancelPairing()
+                    // Close the popover; opening it again starts a new pairing.
+                    NSApp.keyWindow?.close()
+                }
             } label: {
-                Text("Cancel")
+                Text(model.deviceToReturnTo.map { "Back to \($0.name)" } ?? "Cancel")
                     .font(.system(size: 14))
                     .foregroundStyle(Color(hex: 0xA9D2FF))
                     .frame(maxWidth: .infinity)
@@ -51,10 +56,22 @@ struct PairingView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .multilineTextAlignment(.center)
+        .overlay(alignment: .topTrailing) {
+            if model.devices.count > 1 {
+                DeviceSwitcher(model: model) { other in
+                    if other.id != device.id { model.leavePairing(for: other) }
+                }
+            }
+        }
         .popoverContainer(theme, width: 308, padding: 24)
         .onAppear { pinFocused = true }
-        .task { await model.beginPairing() }
-        .onDisappear { model.cancelPairing() }
+        // Starts again when the switcher moves to another TV that needs pairing.
+        .task(id: device.id) {
+            digits = ""
+            isVerifying = false
+            await model.beginPairing()
+        }
+        .onDisappear { model.cancelPairing(on: device.id) }
     }
 
     private var badge: some View {

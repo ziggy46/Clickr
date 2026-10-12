@@ -27,7 +27,7 @@ struct DeviceHeader: View {
                         .disabled(model.connectionState != .connected)
                 }
                 if model.devices.count > 1 {
-                    switcher
+                    DeviceSwitcher(model: model)
                 }
             }
         }
@@ -71,11 +71,19 @@ struct DeviceHeader: View {
             .font(.system(size: 12))
             .foregroundStyle(theme.secondaryText)
     }
+}
 
-    private var switcher: some View {
+/// Menu of the TVs on the network. The pairing view passes its own action so it can stop
+/// pairing with one TV before moving to another.
+struct DeviceSwitcher: View {
+    let model: RemoteViewModel
+    var onSelect: ((DiscoveredDevice) -> Void)?
+    @Environment(\.remoteTheme) private var theme
+
+    var body: some View {
         Menu {
             ForEach(model.devices) { device in
-                Button(device.name) { model.select(device) }
+                Button(device.name) { (onSelect ?? model.select)(device) }
             }
         } label: {
             Image(systemName: "chevron.up.chevron.down")

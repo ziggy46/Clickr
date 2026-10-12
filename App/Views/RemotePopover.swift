@@ -17,7 +17,7 @@ struct RemotePopover: View {
     @ViewBuilder
     private var content: some View {
         if model.connectionState == .needsPairing, let device = model.selectedDevice {
-            PairingView(model: model, deviceName: device.name)
+            PairingView(model: model, device: device)
                 .windowBackgroundCleared(!theme.isGlass)
         } else {
             remote
