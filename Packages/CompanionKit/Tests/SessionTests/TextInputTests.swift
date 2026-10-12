@@ -1,5 +1,6 @@
 import Discovery
 import Foundation
+import Plist
 import Network
 import Store
 import TestSupport
@@ -44,7 +45,7 @@ struct TextInputVector: Decodable {
 @Suite struct BinaryPlistTests {
     @Test(arguments: [
         PlistValue.null, .bool(true), .bool(false),
-        .int(0), .int(255), .int(256), .int(70_000), .int(5_000_000_000), .int(-1),
+        .int(0), .int(255), .int(256), .int(70_000), .int(5_000_000_000), .int(-1), .real(2.5), .real(-0.001),
         .string(""), .string("ascii"), .string("Café ’s Room"), .string(String(repeating: "x", count: 40)),
         .data(Data()), .data(Data(repeating: 7, count: 300)),
         .uid(0), .uid(300),
@@ -76,7 +77,7 @@ private func device(at endpoint: NWEndpoint) -> DiscoveredDevice {
 private func connectedSession() async throws -> (FakeAppleTV, AppleTVSession) {
     let tv = try FakeAppleTV(pin: "4821")
     try await tv.start()
-    let session = AppleTVSession(device: device(at: tv.endpoint), store: InMemoryCredentialStore())
+    let session = AppleTVSession(device: device(at: tv.endpoint), store: InMemoryCredentialStore(), nowPlaying: false)
     try await session.beginPairing()
     try await session.finishPairing(pin: "4821")
     await session.connect()

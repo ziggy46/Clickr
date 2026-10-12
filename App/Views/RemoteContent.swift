@@ -10,7 +10,9 @@ struct RemoteContent: View {
     var body: some View {
         VStack(spacing: theme.spacing) {
             DeviceHeader(model: model)
-            // Now Playing (Milestone 10) stays hidden until it has real data.
+            if let nowPlaying = model.nowPlaying {
+                NowPlayingCard(nowPlaying: nowPlaying, artwork: model.artwork)
+            }
             Group {
                 Clickpad(model: model)
                 ButtonRow(model: model)

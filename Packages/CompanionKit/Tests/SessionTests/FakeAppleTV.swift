@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import Plist
 import Network
 import OPACK
 import TLV8
@@ -158,7 +159,7 @@ final class FakeAppleTV: @unchecked Sendable {
     }
 
     /// One client connection and its handshake state.
-    private final class Link {
+    private final class Link: @unchecked Sendable {
         let connection: NWConnection
         unowned let tv: FakeAppleTV
         var buffer = Data()

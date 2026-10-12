@@ -3,10 +3,12 @@ import Foundation
 /// The subset of Apple's binary property list format (bplist00) needed for the keyed
 /// archives used by text input. Includes the UID type, which PropertyListSerialization
 /// can read but gives no way to create or inspect.
-enum PlistValue: Hashable, Sendable {
+public enum PlistValue: Hashable, Sendable {
     case null
     case bool(Bool)
     case int(Int64)
+    /// Real numbers. Dates are read as reals too (seconds since 2001).
+    case real(Double)
     case string(String)
     case data(Data)
     /// A reference into a keyed archive's `$objects`.
@@ -14,13 +16,13 @@ enum PlistValue: Hashable, Sendable {
     case array([PlistValue])
     case dict([String: PlistValue])
 
-    subscript(key: String) -> PlistValue? {
+    public subscript(key: String) -> PlistValue? {
         if case .dict(let entries) = self { entries[key] } else { nil }
     }
 }
 
-enum BinaryPlist {
-    enum DecodingError: Error, Equatable {
+public enum BinaryPlist {
+    public enum DecodingError: Error, Equatable {
         case notABinaryPlist
         case truncated
         case unsupportedObject(UInt8)
@@ -29,7 +31,7 @@ enum BinaryPlist {
 
     // MARK: - Writing
 
-    static func encode(_ root: PlistValue) -> Data {
+    public static func encode(_ root: PlistValue) -> Data {
         // Pass 1: give every value an index (root first). Containers remember the indexes
         // of their children; scalars are written straight away.
         enum Slot {
@@ -108,6 +110,8 @@ enum BinaryPlist {
             }
             let units = Array(string.utf16)
             return marker(0x60, count: units.count) + Data(units.flatMap { [UInt8($0 >> 8), UInt8($0 & 0xFF)] })
+        case .real(let number):
+            return Data([0x23]) + bigEndian(number.bitPattern, size: 8)
         case .data(let data):
             return marker(0x40, count: data.count) + data
         case .uid(let index):
@@ -130,7 +134,7 @@ enum BinaryPlist {
 
     // MARK: - Reading
 
-    static func decode(_ data: Data) throws -> PlistValue {
+    public static func decode(_ data: Data) throws -> PlistValue {
         let bytes = [UInt8](data)
         guard bytes.count >= 40, bytes.starts(with: Array("bplist0".utf8)) else { throw DecodingError.notABinaryPlist }
         let trailer = bytes.suffix(32).map { $0 }
@@ -175,6 +179,13 @@ enum BinaryPlist {
                 }
             case 0x1:
                 return .int(Int64(bitPattern: readInt(try take(1 << Int(low)))))
+            case 0x2:
+                let raw = try take(1 << Int(low))
+                return raw.count == 4
+                    ? .real(Double(Float(bitPattern: UInt32(readInt(raw)))))
+                    : .real(Double(bitPattern: readInt(raw)))
+            case 0x3:
+                return .real(Double(bitPattern: readInt(try take(8))))
             case 0x4:
                 return .data(Data(try take(try count(low))))
             case 0x5:

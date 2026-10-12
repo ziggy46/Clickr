@@ -1,6 +1,9 @@
+import AirPlay
 import CryptoKit
 import Discovery
 import Foundation
+import MRP
+import Network
 import OPACK
 import os
 import Pairing
@@ -15,6 +18,10 @@ public enum TVUpdate: Sendable, Equatable {
     case keyboardShown(text: String)
     /// The TV's text field lost focus.
     case keyboardHidden
+    /// What's playing changed; nil when nothing is.
+    case nowPlaying(NowPlaying?)
+    /// Artwork for the item that's playing (nil if the app doesn't provide any).
+    case artwork(Data?)
 }
 
 /// One Apple TV: pairing, the encrypted connection, and remote commands.
@@ -65,11 +72,23 @@ public actor AppleTVSession {
     /// `currentText` is what we believe is in the field.
     private var textSession: TextInputArchive.Session?
     private var updateContinuations: [UUID: AsyncStream<TVUpdate>.Continuation] = [:]
+
+    // Now playing comes over a separate AirPlay connection (MRP tunnel). It's optional:
+    // if it fails the remote works the same, and it retries in the background.
+    private var airPlay: AirPlayRemoteControl?
+    private var airPlayTask: Task<Void, Never>?
+    private var tracker = NowPlayingTracker()
+    private var nowPlaying: NowPlaying?
+    private var artworkItemID: String?
     private static let backoff: [Duration] = [.seconds(1), .seconds(2), .seconds(5), .seconds(10)]
 
-    public init(device: DiscoveredDevice, store: CredentialStore) {
+    private let nowPlayingEnabled: Bool
+
+    /// `nowPlaying: false` skips the AirPlay connection (for tests with a fake TV).
+    public init(device: DiscoveredDevice, store: CredentialStore, nowPlaying: Bool = true) {
         self.device = device
         self.store = store
+        nowPlayingEnabled = nowPlaying
         let isPaired = ((try? store.credentials(for: device.id)) ?? nil) != nil
         currentState = isPaired ? .disconnected : .needsPairing
     }
@@ -184,6 +203,7 @@ public actor AppleTVSession {
         }
         log.info("Connected to \(self.device.name, privacy: .public)")
         setState(.connected)
+        startNowPlaying(credentials: credentials)
     }
 
     /// Asks for the power state and subscribes to changes, then starts the text input
@@ -395,6 +415,126 @@ public actor AppleTVSession {
         }
     }
 
+    // MARK: - Now playing
+
+    private func startNowPlaying(credentials: PairingCredentials) {
+        guard nowPlayingEnabled else { return }
+        airPlayTask?.cancel()
+        airPlayTask = Task { await runNowPlaying(credentials: credentials) }
+    }
+
+    private func stopNowPlaying() {
+        airPlayTask?.cancel()
+        airPlayTask = nil
+        if let airPlay { Task { await airPlay.close() } }
+        airPlay = nil
+        tracker = NowPlayingTracker()
+        artworkItemID = nil
+        if nowPlaying != nil {
+            nowPlaying = nil
+            publish(.nowPlaying(nil))
+        }
+    }
+
+    /// Keeps an AirPlay tunnel open while connected, retrying with a growing delay.
+    private func runNowPlaying(credentials: PairingCredentials) async {
+        let delays: [Duration] = [.seconds(5), .seconds(15), .seconds(60)]
+        var attempt = 0
+        // AirPlay is advertised under the same name as Companion.
+        let endpoint = NWEndpoint.service(name: device.name, type: "_airplay._tcp", domain: "local.", interface: nil)
+        while !Task.isCancelled, currentState == .connected {
+            let session = AirPlayRemoteControl(endpoint: endpoint, credentials: credentials, identity: Self.airPlayIdentity(for: credentials))
+            airPlay = session
+            do {
+                try await session.start()
+                attempt = 0
+                log.info("Now playing connected for \(self.device.name, privacy: .public)")
+                for await message in session.messages {
+                    guard tracker.handle(message) else { continue }
+                    nowPlayingChanged()
+                }
+                log.info("Now playing connection ended")
+            } catch {
+                log.error("Now playing setup failed: \(String(describing: error), privacy: .public)")
+            }
+            await session.close()
+            // A cancelled run leaves the state to whoever cancelled it.
+            guard !Task.isCancelled else { return }
+            airPlay = nil
+            tracker = NowPlayingTracker()
+            artworkItemID = nil
+            if nowPlaying != nil {
+                nowPlaying = nil
+                publish(.nowPlaying(nil))
+            }
+            guard !Task.isCancelled else { return }
+            try? await Task.sleep(for: delays[min(attempt, delays.count - 1)])
+            attempt += 1
+        }
+    }
+
+    private func nowPlayingChanged() {
+        let current = tracker.current
+        guard current != nowPlaying else { return }
+        if current?.itemID != nowPlaying?.itemID || current?.bundleID != nowPlaying?.bundleID {
+            log.info("Now playing: \(current?.bundleID ?? "nothing", privacy: .public), title \(current?.title == nil ? "missing" : "present", privacy: .public), artwork \(current?.artworkAvailable == true ? "available" : "none", privacy: .public)")
+        }
+        nowPlaying = current
+        publish(.nowPlaying(current))
+
+        // Fetch artwork once per item.
+        guard let current, current.itemID != artworkItemID else { return }
+        artworkItemID = current.itemID
+        guard current.artworkAvailable, let airPlay else {
+            publish(.artwork(nil))
+            return
+        }
+        let location = current.location
+        Task {
+            do {
+                // 3x the 38 pt card artwork, keeping the aspect ratio.
+                let reply = try await airPlay.request(.playbackQueueRequest, MRPRequests.playbackQueueRequest(location: location, width: 120, height: -1))
+                let image = reply.inner?.message(3)?.messages(2).first?.data(3)
+                self.artworkArrived(image, for: current.itemID)
+            } catch {
+                self.log.info("Artwork request failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
+    private func artworkArrived(_ image: Data?, for itemID: String?) {
+        guard itemID == nowPlaying?.itemID else { return }
+        publish(.artwork(image))
+    }
+
+    /// Clickr's identity for the AirPlay session: this Mac's real model and OS, under the
+    /// name "Clickr". The device and MAC addresses are made up but stay the same for this
+    /// pairing (locally administered addresses, derived from the pairing ID).
+    static func airPlayIdentity(for credentials: PairingCredentials) -> AirPlayIdentity {
+        let digest = Array(SHA256.hash(data: credentials.deviceID + Data("airplay".utf8)))
+        var bytes = Array(digest.prefix(6))
+        bytes[0] = (bytes[0] & 0xFC) | 0x02
+        let address = bytes.map { String(format: "%02X", $0) }.joined(separator: ":")
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        return AirPlayIdentity(
+            name: PairSetup.displayName,
+            model: sysctl("hw.model") ?? "Mac",
+            osName: "macOS",
+            osVersion: "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)",
+            osBuild: sysctl("kern.osversion") ?? "",
+            deviceID: address,
+            macAddress: address
+        )
+    }
+
+    private static func sysctl(_ name: String) -> String? {
+        var size = 0
+        guard sysctlbyname(name, nil, &size, nil, 0) == 0, size > 0 else { return nil }
+        var buffer = [CChar](repeating: 0, count: size)
+        guard sysctlbyname(name, &buffer, &size, nil, 0) == 0 else { return nil }
+        return String(decoding: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
+    }
+
     // MARK: - Pairing
 
     /// Connects and starts pair-setup. The TV shows a 4-digit PIN.
@@ -468,6 +608,7 @@ public actor AppleTVSession {
 
     /// Closes on purpose. No reconnect.
     private func close() {
+        stopNowPlaying()
         guard let connection else { return }
         self.connection = nil
         isMessaging = false
@@ -479,6 +620,7 @@ public actor AppleTVSession {
     private func ended(_ error: Error, for source: CompanionConnection) {
         guard source === connection else { return }
         connection = nil
+        stopNowPlaying()
         failWaiters(error)
         if isMessaging {
             isMessaging = false

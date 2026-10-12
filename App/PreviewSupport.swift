@@ -1,6 +1,7 @@
 #if DEBUG
 import AppKit
 import Discovery
+import MRP
 import Network
 import Session
 import SwiftUI
@@ -15,6 +16,7 @@ import SwiftUI
 /// - ClickrPreviewContrast: increased
 /// - ClickrPreviewDevices: number of fake TVs (default 2)
 /// - ClickrPreviewPairingFailed: YES to show the wrong-PIN message
+/// - ClickrPreviewNowPlaying: YES to show a sample Now Playing card
 /// - ClickrPreviewWindow: YES to also show the popover in a plain window behind all other
 ///   windows, so it can be captured with `screencapture -l <id>` without opening the menu.
 struct PreviewOverrides {
@@ -24,6 +26,7 @@ struct PreviewOverrides {
     var design: RemoteTheme.Design?
     var increasedContrast: Bool
     var showsWindow: Bool
+    var nowPlaying: NowPlaying?
 
     static let current: PreviewOverrides? = {
         let defaults = UserDefaults.standard
@@ -51,7 +54,12 @@ struct PreviewOverrides {
             pairingFailed: defaults.bool(forKey: "ClickrPreviewPairingFailed"),
             design: defaults.string(forKey: "ClickrPreviewDesign").map { $0 == "glass" ? .glass : .fallback },
             increasedContrast: defaults.string(forKey: "ClickrPreviewContrast") == "increased",
-            showsWindow: defaults.bool(forKey: "ClickrPreviewWindow")
+            showsWindow: defaults.bool(forKey: "ClickrPreviewWindow"),
+            nowPlaying: defaults.bool(forKey: "ClickrPreviewNowPlaying") ? NowPlaying(
+                state: .playing, title: "Episode 3", artist: "Some Show", appName: "TV",
+                duration: 2700, elapsed: 1000, elapsedTimestamp: Date(), playbackRate: 1,
+                artworkAvailable: false, itemID: "preview", location: 0
+            ) : nil
         )
     }()
 }

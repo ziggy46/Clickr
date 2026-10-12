@@ -31,13 +31,22 @@ public struct PairVerify: Sendable {
 
     /// M1, sent in a PV_Start frame.
     public func startRequest() -> OPACKValue {
-        let tlv = TLV8([.init(.seqNo, Data([1])), .init(.publicKey, ephemeralKey.publicKey.rawRepresentation)])
-        return ["_pd": .data(tlv.encoded()), "_auTy": 4]
+        ["_pd": .data(startTLV().encoded()), "_auTy": 4]
     }
 
     /// Reads M2, checks the TV is the one we paired with, and returns M3 (PV_Next frame).
     public mutating func respond(to message: OPACKValue) throws -> OPACKValue {
         let tlv = try PairSetup.pairingData(message, expectedStep: 2)
+        return ["_pd": .data(try respond(toTLV: tlv).encoded())]
+    }
+
+    /// M1 as bare TLV8 (AirPlay sends it as an HTTP body).
+    public func startTLV() -> TLV8 {
+        TLV8([.init(.seqNo, Data([1])), .init(.publicKey, ephemeralKey.publicKey.rawRepresentation)])
+    }
+
+    /// Reads M2 as bare TLV8 and returns M3 as bare TLV8.
+    public mutating func respond(toTLV tlv: TLV8) throws -> TLV8 {
         guard let theirPublic = tlv[.publicKey], let encrypted = tlv[.encryptedData], encrypted.count >= 16 else {
             throw PairSetup.PairingError.badResponse("M2 missing key or data")
         }
@@ -69,8 +78,7 @@ public struct PairVerify: Sendable {
         let reply = TLV8([.init(.identifier, credentials.deviceID), .init(.signature, ourSignature)])
         let sealed = try ChaChaPoly.seal(reply.encoded(), using: key, nonce: PairSetup.pairingNonce("PV-Msg03"))
 
-        let m3 = TLV8([.init(.seqNo, Data([3])), .init(.encryptedData, sealed.ciphertext + sealed.tag)])
-        return ["_pd": .data(m3.encoded())]
+        return TLV8([.init(.seqNo, Data([3])), .init(.encryptedData, sealed.ciphertext + sealed.tag)])
     }
 
     /// Reads M4; throws if the TV rejected us.
@@ -80,10 +88,16 @@ public struct PairVerify: Sendable {
 
     /// The transport keys: (ours to the TV, the TV's to us). Empty salt, as in pyatv.
     public func transportKeys() throws -> (output: Data, input: Data) {
+        try keys(salt: "", outputInfo: "ClientEncrypt-main", inputInfo: "ServerEncrypt-main")
+    }
+
+    /// Keys derived from this verify's shared secret. AirPlay reuses one verify for its
+    /// control, event and data connections, with different salt and info strings for each.
+    public func keys(salt: String, outputInfo: String, inputInfo: String) throws -> (output: Data, input: Data) {
         guard let sharedSecret else { throw PairSetup.PairingError.badResponse("keys before M2") }
         return (
-            PairSetup.hkdfBytes(sharedSecret, salt: "", info: "ClientEncrypt-main"),
-            PairSetup.hkdfBytes(sharedSecret, salt: "", info: "ServerEncrypt-main")
+            PairSetup.hkdfBytes(sharedSecret, salt: salt, info: outputInfo),
+            PairSetup.hkdfBytes(sharedSecret, salt: salt, info: inputInfo)
         )
     }
 }

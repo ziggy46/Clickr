@@ -1,4 +1,5 @@
 import Foundation
+import Plist
 
 /// The NSKeyedArchiver-format payloads ("RTI" remote text input) that `_tiStart` returns and
 /// `_tiC` carries. Built by hand with the same object layout pyatv uses.

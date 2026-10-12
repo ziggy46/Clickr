@@ -31,7 +31,7 @@ private func waitFor(_ target: ConnectionState, in session: AppleTVSession, time
 private func pairedSession() async throws -> (FakeAppleTV, AppleTVSession) {
     let tv = try FakeAppleTV(pin: "4821")
     try await tv.start()
-    let session = AppleTVSession(device: device(at: tv.endpoint), store: InMemoryCredentialStore())
+    let session = AppleTVSession(device: device(at: tv.endpoint), store: InMemoryCredentialStore(), nowPlaying: false)
     try await session.beginPairing()
     try await session.finishPairing(pin: "4821")
     return (tv, session)

@@ -1,5 +1,7 @@
+import AppKit
 import Discovery
 import Foundation
+import MRP
 import Observation
 import os
 import Pairing
@@ -22,6 +24,11 @@ final class RemoteViewModel {
 
     /// Whether the selected TV says it's asleep.
     private(set) var isAsleep = false
+
+    /// What's playing on the selected TV; nil hides the Now Playing card.
+    private(set) var nowPlaying: NowPlaying?
+    /// Artwork for it, when the app provides some.
+    private(set) var artwork: NSImage?
 
     /// True from a power hold until the TV reports its new state (or gives up after 5 s).
     private(set) var powerChangePending = false
@@ -143,6 +150,8 @@ final class RemoteViewModel {
         stateTask?.cancel()
         updatesTask?.cancel()
         isAsleep = false
+        nowPlaying = nil
+        artwork = nil
         receivedFromTV("")
         guard let session = selectedSession else {
             connectionState = .disconnected
@@ -162,6 +171,11 @@ final class RemoteViewModel {
                     self?.confirmPowerChange(asleep: asleep)
                 case .keyboardShown(let text): self?.receivedFromTV(text)
                 case .keyboardHidden: self?.receivedFromTV("")
+                case .nowPlaying(let playing):
+                    if playing?.itemID != self?.nowPlaying?.itemID { self?.artwork = nil }
+                    self?.nowPlaying = playing
+                case .artwork(let data):
+                    self?.artwork = data.flatMap(NSImage.init(data:))
                 }
             }
         }
@@ -357,6 +371,7 @@ final class RemoteViewModel {
     #if DEBUG
     private func apply(_ preview: PreviewOverrides) {
         isPreview = true
+        nowPlaying = preview.nowPlaying
         devices = preview.devices
         selectedDeviceID = preview.devices.first?.id
         connectionState = preview.state

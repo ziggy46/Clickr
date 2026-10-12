@@ -206,6 +206,13 @@ pyatv's long-press Select holds down for 1 s, matching the plan.
   - *First version (Milestone 9), following pyatv:* each update sent `_tiStop` then `_tiStart`; the reply's `_tiD` is a keyed archive with `sessionUUID` (raw 16 bytes) and the field's text at `documentState.docSt.contextBeforeInput`. No `_tiD` means no text field has focus. Text goes in a `_tiC` **event** (`_t` 1, no reply) with `{"_tiV": 1, "_tiD": <RTITextOperations archive>}`: `keyboardOutput.insertionText` to type, or an empty `textToAssert` with an empty keyboard output to clear. If the new text extends what's on the TV only the rest is typed; otherwise it clears and retypes. Rapid typing is coalesced to the latest text.
   - The archives are written and read with a small binary plist codec of our own (Foundation can read the UID type but can't create or inspect it), with the same object layout as pyatv's pre-encoded payloads.
 - **Now playing:** Companion alone probably doesn't carry full metadata (pyatv gets it from MRP over AirPlay). **Milestone 10, stretch.** Until then the Now Playing card is **hidden**, not shown with placeholder text.
+  - *Confirmed (Milestone 10):* Companion's only media event, `_iMC`, carries control flags, no metadata. Now playing comes from **MRP tunneled over AirPlay 2**, as in pyatv. A prototype with pyatv showed the TV accepts **Clickr's Companion pairing for AirPlay too**, so no second PIN is needed.
+  - *Implemented:* the `AirPlay` module (pair-verify as raw TLV8 over `POST /pair-verify`; HAP framing with 1024-byte blocks and a `00000000 ‖ LE64` nonce; RTSP SETUP for the event and data channels; data-stream frames with a 32-byte big-endian header and a bplist `{"params":{"data":…}}`; `POST /feedback` every 2 s) and the `MRP` module (a small protobuf codec, the DeviceInfo / SetConnectionState / ClientUpdatesConfig / GetKeyboardSession handshake, and a now-playing model ported from pyatv's player state). The full protocol notes, derived from pyatv's source, are summarized in the code comments.
+  - The session opens the tunnel once Companion is connected, finding AirPlay by the TV's name (`_airplay._tcp`, added to `NSBonjourServices`), and retries it in the background (5 s, 15 s, then every 60 s). It never affects the remote.
+  - The SETUP identity is the Mac's real model and macOS version, named "Clickr", with a made-up but stable device/MAC address derived from the pairing. The MRP DeviceInfo keeps pyatv's values (`com.apple.TVRemote`, iPhone class), which the TV is known to accept.
+  - Differences from pyatv: the data-channel sequence number counts up (pyatv sends the same one every time), and the artwork reply is read from its first queue item rather than indexed by the local queue position.
+  - Artwork depends on the app: the prototype saw Spotify provide 768 × 768 artwork and YouTube provide none (`artworkAvailable` false, empty now-playing info). Without artwork the card shows the spec's placeholder.
+  - Tests: protobuf, HAP framing and data-stream frames match pyatv byte for byte; a fake AirPlay server covers the whole tunnel, artwork and keep-alive.
 
 ### 3.9 Public API used by the app
 
@@ -310,7 +317,7 @@ Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
 
 - **Power button** *(added 2026-10-12 at the owner's request)*: a 36 × 36 circle with `power` at 16 pt semibold, left of the switcher (8 pt apart), same glass style. Shown whenever a TV is selected, enabled only while connected. Hold for 1 s (a white ring fills around it) to put the TV to sleep, or to wake it when the TV reports it's asleep. Sends only the button-up half of HID Sleep (12) / Wake (13), as pyatv does. Accessibility label "Power". After the hold the ring stays full and pulses until the TV reports its new power state (sleep ≈ 0.2 s, wake ≈ 2 s on an Apple TV 4K), then fades with a small icon bounce and a trackpad haptic; with no report in 5 s it resets with a shake. The icon is dimmed (45%) while the TV is asleep. The other controls stay enabled while it's asleep, since any press wakes it.
 
-**2. Now playing card** (Milestone 10; hidden until then)
+**2. Now playing card** (Milestone 10; hidden whenever nothing is playing)
 
 - Padding **10**, radius **18**, glass at white 10% plus a 1 pt white 14% edge. VStack spacing 9.
 - Row, HStack spacing 10:

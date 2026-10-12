@@ -8,7 +8,7 @@ let package = Package(
     products: [
         .library(
             name: "CompanionKit",
-            targets: ["OPACK", "TLV8", "BigInt", "SRP", "Pairing", "Transport", "Discovery", "Session", "Store"]
+            targets: ["OPACK", "TLV8", "BigInt", "SRP", "Pairing", "Transport", "Discovery", "Session", "Store", "Plist", "MRP", "AirPlay"]
         ),
     ],
     targets: [
@@ -20,7 +20,10 @@ let package = Package(
         .target(name: "Transport"),
         .target(name: "Discovery"),
         .target(name: "Store", dependencies: ["Pairing"]),
-        .target(name: "Session", dependencies: ["Transport", "Pairing", "OPACK", "Store", "Discovery"]),
+        .target(name: "Plist"),
+        .target(name: "MRP"),
+        .target(name: "AirPlay", dependencies: ["MRP", "Plist", "Pairing", "TLV8"]),
+        .target(name: "Session", dependencies: ["Transport", "Pairing", "OPACK", "Store", "Discovery", "Plist", "MRP", "AirPlay"]),
 
         // Shared helpers for the test targets.
         .target(name: "TestSupport", dependencies: ["BigInt", "SRP"], path: "Tests/TestSupport"),
@@ -33,7 +36,10 @@ let package = Package(
         .testTarget(name: "TransportTests", dependencies: ["Transport", "TestSupport"], resources: [.copy("Vectors")]),
         .testTarget(name: "DiscoveryTests", dependencies: ["Discovery"]),
         .testTarget(name: "StoreTests", dependencies: ["Store"]),
-        .testTarget(name: "SessionTests", dependencies: ["Session", "Pairing", "Store", "Discovery", "OPACK", "TLV8", "Transport", "TestSupport"], resources: [.copy("Vectors")]),
+        .testTarget(name: "SessionTests", dependencies: ["Session", "Pairing", "Store", "Discovery", "OPACK", "TLV8", "Transport", "Plist", "TestSupport"], resources: [.copy("Vectors")]),
+
+        .testTarget(name: "MRPTests", dependencies: ["MRP", "TestSupport"], resources: [.copy("Vectors")]),
+        .testTarget(name: "AirPlayTests", dependencies: ["AirPlay", "MRP", "Plist", "Pairing", "TLV8", "TestSupport"], resources: [.copy("Vectors")]),
 
         // Talks to a real Apple TV. Skipped unless CLICKR_TV_HOST is set (see the test file).
         .testTarget(name: "IntegrationTests", dependencies: ["Transport"]),

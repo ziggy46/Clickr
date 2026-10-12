@@ -642,6 +642,104 @@ def text_input_vectors():
     }
 
 
+# MRP over AirPlay ---------------------------------------------------------------
+
+
+def mrp_vectors():
+    """MRP protobufs, HAP framing and data-stream frames, made with pyatv's own code.
+
+    Random identifiers are replaced with fixed strings so the bytes are reproducible.
+    """
+    from pyatv.auth.hap_session import HAPSession
+    from pyatv.protocols.airplay.channels import DataStreamChannel
+    from pyatv.protocols.mrp import messages
+    from pyatv.protocols.mrp import protobuf as pb
+    from pyatv.settings import InfoSettings
+    from pyatv.support.variant import write_variant
+
+    def fixed(message, identifier=None):
+        message.uniqueIdentifier = "5E1F2B6C-0A9D-4C3E-8F71-2D4B6A8C0E1F"
+        if identifier is not None:
+            message.identifier = identifier
+        return message.SerializeToString().hex()
+
+    info = InfoSettings()
+    info.name = "Clickr"
+    device_info = messages.device_information(info, "abcdef01-2345-6789-abcd-ef0123456789")
+    handshake = {
+        "device_info": fixed(device_info, "11111111-1111-1111-1111-111111111111"),
+        "set_connection_state": fixed(messages.set_connection_state()),
+        "client_updates_config": fixed(messages.client_updates_config(), "22222222-2222-2222-2222-222222222222"),
+        "get_keyboard_session": fixed(messages.get_keyboard_session(), "33333333-3333-3333-3333-333333333333"),
+        "playback_queue_request": fixed(messages.playback_queue_request(0, 512, -1), "44444444-4444-4444-4444-444444444444"),
+    }
+
+    # A SetState the way the TV sends it: player path, state and a queue with one item.
+    state = messages.create(pb.SET_STATE_MESSAGE)
+    inner = pb.extract_inner(state)
+    inner.playbackState = 1
+    inner.playerPath.origin.displayName = "Apple TV"
+    inner.playerPath.client.bundleIdentifier = "com.example.video"
+    inner.playerPath.client.displayName = "Video"
+    inner.playerPath.player.identifier = "MediaRemote-DefaultPlayer"
+    inner.playbackQueue.location = 0
+    item = inner.playbackQueue.contentItems.add()
+    item.identifier = "ITEM-1"
+    meta = item.metadata
+    meta.title = "Episode 3"
+    meta.trackArtistName = "Some Show"
+    meta.albumName = "Season 1"
+    meta.duration = 2712.5
+    meta.elapsedTime = 61.25
+    meta.elapsedTimeTimestamp = 813508517.465923
+    meta.playbackRate = 1.0
+    meta.artworkAvailable = True
+    meta.artworkMIMEType = "image/jpeg"
+    meta.artworkIdentifier = "3e7d403ad36f7472"
+    meta.mediaType = 2
+    set_state = fixed(state)
+
+    # The TV's reply to a PlaybackQueueRequest: a SetState whose item carries the artwork.
+    artwork_reply = messages.create(pb.SET_STATE_MESSAGE)
+    art_item = pb.extract_inner(artwork_reply).playbackQueue.contentItems.add()
+    art_item.identifier = "ITEM-1"
+    art_item.artworkData = fixed_bytes(50, 300)
+    art_item.artworkDataWidth = 512
+    art_item.artworkDataHeight = 288
+    artwork = fixed(artwork_reply, "44444444-4444-4444-4444-444444444444")
+
+    # HAP framing: 1500 bytes splits into a 1024-byte and a 476-byte block.
+    out_key, in_key = fixed_bytes(60, 32), fixed_bytes(61, 32)
+    session = HAPSession()
+    session.enable(out_key, in_key)
+    plaintext = fixed_bytes(62, 1500)
+    framed = session.encrypt(plaintext)
+    reverse = HAPSession()
+    reverse.enable(in_key, out_key)
+    assert reverse.decrypt(framed) == plaintext
+
+    # A data-stream frame the way pyatv's channel sends one MRP message.
+    sent = []
+    channel = DataStreamChannel.__new__(DataStreamChannel)
+    channel.send = lambda data: sent.append(data)
+    channel.send_seqno = 0x123456789
+    data_frame_payload = bytes.fromhex(handshake["set_connection_state"])
+    DataStreamChannel.send_protobuf(channel, pb.ProtocolMessage.FromString(data_frame_payload))
+
+    return {
+        "handshake": handshake,
+        "set_state": set_state,
+        "artwork_reply": artwork,
+        "hap_out_key": out_key.hex(),
+        "hap_in_key": in_key.hex(),
+        "hap_plaintext": plaintext.hex(),
+        "hap_framed": framed.hex(),
+        "data_frame": sent[0].hex(),
+        "data_frame_seqno": 0x123456789,
+        "varint_300": write_variant(300).hex(),
+    }
+
+
 def write(path: Path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n")
@@ -660,3 +758,6 @@ if __name__ == "__main__":
     write(TESTS / "PairingTests" / "Vectors" / "verify.json", verify)
     write(TESTS / "TransportTests" / "Vectors" / "frames.json", frames)
     write(TESTS / "SessionTests" / "Vectors" / "text_input.json", text_input_vectors())
+    mrp = mrp_vectors()
+    write(TESTS / "MRPTests" / "Vectors" / "mrp.json", mrp)
+    write(TESTS / "AirPlayTests" / "Vectors" / "mrp.json", mrp)

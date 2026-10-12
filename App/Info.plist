@@ -29,6 +29,7 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_companion-link._tcp</string>
+		<string>_airplay._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Clickr finds and controls Apple TVs on your network.</string>

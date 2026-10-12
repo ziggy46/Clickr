@@ -21,7 +21,7 @@ private func firstState(_ session: AppleTVSession) async -> ConnectionState? {
         try await tv.start()
         defer { tv.stop() }
         let store = InMemoryCredentialStore()
-        let session = AppleTVSession(device: device(at: tv.endpoint), store: store)
+        let session = AppleTVSession(device: device(at: tv.endpoint), store: store, nowPlaying: false)
         #expect(await firstState(session) == .needsPairing)
 
         try await session.beginPairing()
@@ -40,7 +40,7 @@ private func firstState(_ session: AppleTVSession) async -> ConnectionState? {
         try await tv.start()
         defer { tv.stop() }
         let store = InMemoryCredentialStore()
-        let session = AppleTVSession(device: device(at: tv.endpoint), store: store)
+        let session = AppleTVSession(device: device(at: tv.endpoint), store: store, nowPlaying: false)
 
         try await session.beginPairing()
         await #expect(throws: PairSetup.PairingError.wrongPIN) {
