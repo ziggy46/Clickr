@@ -8,7 +8,7 @@ let package = Package(
     products: [
         .library(
             name: "CompanionKit",
-            targets: ["OPACK", "TLV8", "BigInt", "SRP", "Pairing", "Transport", "Discovery", "Session", "Store", "Plist", "MRP", "AirPlay"]
+            targets: ["OPACK", "TLV8", "BigInt", "SRP", "Pairing", "Transport", "Discovery", "Session", "Store", "Plist", "MRP", "AirPlay", "Updates"]
         ),
     ],
     targets: [
@@ -22,6 +22,7 @@ let package = Package(
         .target(name: "Store", dependencies: ["Pairing"]),
         .target(name: "Plist"),
         .target(name: "MRP"),
+        .target(name: "Updates"),
         .target(name: "AirPlay", dependencies: ["MRP", "Plist", "Pairing", "TLV8"]),
         .target(name: "Session", dependencies: ["Transport", "Pairing", "OPACK", "Store", "Discovery", "Plist", "MRP", "AirPlay"]),
 
@@ -38,6 +39,7 @@ let package = Package(
         .testTarget(name: "StoreTests", dependencies: ["Store"]),
         .testTarget(name: "SessionTests", dependencies: ["Session", "Pairing", "Store", "Discovery", "OPACK", "TLV8", "Transport", "Plist", "TestSupport"], resources: [.copy("Vectors")]),
 
+        .testTarget(name: "UpdatesTests", dependencies: ["Updates"]),
         .testTarget(name: "MRPTests", dependencies: ["MRP", "TestSupport"], resources: [.copy("Vectors")]),
         .testTarget(name: "AirPlayTests", dependencies: ["AirPlay", "MRP", "Plist", "Pairing", "TLV8", "TestSupport"], resources: [.copy("Vectors")]),
 

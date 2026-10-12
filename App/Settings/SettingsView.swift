@@ -1,8 +1,10 @@
 import SwiftUI
+import Updates
 
 /// Clickr's Settings window, opened from the menu bar icon's right-click menu.
 struct SettingsView: View {
     let model: RemoteViewModel
+    @Bindable var updates: UpdateController
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var launchError: String?
     @State private var deviceToForget: String?
@@ -58,8 +60,27 @@ struct SettingsView: View {
                     ShortcutRecorder()
                 }
             }
+
+            Section("Updates") {
+                Toggle("Check for updates automatically", isOn: $updates.checksAutomatically)
+                LabeledContent("Clickr \(updates.currentVersion)") {
+                    HStack(spacing: 8) {
+                        if !updateStatus.isEmpty {
+                            Text(updateStatus).foregroundStyle(.secondary)
+                        }
+                        if updates.availableRelease != nil {
+                            Button("Download…") { updates.openReleasePage() }
+                        } else {
+                            Button("Check Now") { updates.checkNow() }
+                                .disabled(updates.status == .checking)
+                        }
+                    }
+                }
+            }
         }
         .formStyle(.grouped)
+        // Size the window to the whole form instead of scrolling inside it.
+        .scrollDisabled(true)
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { model.refreshPairedDevices() }
@@ -73,6 +94,17 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Clickr removes its pairing key from your Keychain. To remove Clickr from the TV too, open Settings > Remotes and Devices on the Apple TV.")
+        }
+    }
+
+    private var updateStatus: String {
+        switch updates.status {
+        case .idle: ""
+        case .checking: "Checking…"
+        case .upToDate: "Up to date"
+        case .noReleases: "No releases yet"
+        case .available(let release): "Version \(release.version) is available"
+        case .failed(let message): message
         }
     }
 

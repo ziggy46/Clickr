@@ -1,4 +1,5 @@
 import AppKit
+import Updates
 
 /// MenuBarExtra has no right-click menu, so catch right-clicks (and control-clicks) on our
 /// status item ourselves and show a small menu with Settings and Quit.
@@ -7,6 +8,8 @@ enum StatusItemMenu {
     private static var monitor: Any?
     /// Opens the Settings window; set by the SwiftUI side, which owns that action.
     static var openSettings: (() -> Void)?
+    /// When set, the menu leads with an "Update Available" item.
+    static var availableUpdate: Release?
 
     static func install() {
         guard monitor == nil else { return }
@@ -44,6 +47,12 @@ enum StatusItemMenu {
         else { return false }
 
         let menu = NSMenu()
+        if let availableUpdate {
+            let update = NSMenuItem(title: "Update Available (\(availableUpdate.version))…", action: #selector(MenuActions.openUpdate), keyEquivalent: "")
+            update.target = MenuActions.shared
+            menu.addItem(update)
+            menu.addItem(.separator())
+        }
         let settings = NSMenuItem(title: "Settings…", action: #selector(MenuActions.openSettings), keyEquivalent: ",")
         settings.target = MenuActions.shared
         menu.addItem(settings)
@@ -81,6 +90,12 @@ enum StatusItemMenu {
 
         @objc func openSettings() {
             StatusItemMenu.showSettings()
+        }
+
+        @objc func openUpdate() {
+            if let url = StatusItemMenu.availableUpdate?.pageURL {
+                NSWorkspace.shared.open(url)
+            }
         }
     }
 }

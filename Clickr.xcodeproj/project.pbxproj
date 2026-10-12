@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		07FFFC2CFFE814EDE93246A0 /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C099EDEF1117201BB9F02E03 /* PairingView.swift */; };
 		0DC6AC574BBC447E44B2EA71 /* GlobalShortcut.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */; };
+		15ACB5732F72327BCF09E56A /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87C622538B3F85B0D5DEAB9E /* UpdateController.swift */; };
 		20A1CF7C8556BBE62CB89C11 /* KeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA812B5B15FFCA8454605F3 /* KeyboardShortcuts.swift */; };
 		21B7C5D89D842F25B31AB072 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DDA00246752F5F774922B4 /* Theme.swift */; };
 		2662A76FCB7DBBEF9D7118D6 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 111E7281D72A8A2A7AA648EE /* AppIcon.icon */; };
@@ -53,6 +54,7 @@
 		7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
 		7B56458A94B00FC1C6EAF0D3 /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
 		84775BEDFDD829EFA4672DDF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		87C622538B3F85B0D5DEAB9E /* UpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateController.swift; sourceTree = "<group>"; };
 		947C7F5A9374B54CA64530A6 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		9DBA38FE8D501BB5E94BD53A /* DeviceHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeader.swift; sourceTree = "<group>"; };
 		A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickrApp.swift; sourceTree = "<group>"; };
@@ -106,9 +108,18 @@
 				663861EB84F76CA3308A3A52 /* StatusItemMenu.swift */,
 				20DDA00246752F5F774922B4 /* Theme.swift */,
 				F8739709890D28C13256D326 /* Settings */,
+				D7FB1AAB99EBB2E3366481A1 /* Updates */,
 				FCAE7F61AD4C9D39B3676557 /* Views */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		D7FB1AAB99EBB2E3366481A1 /* Updates */ = {
+			isa = PBXGroup;
+			children = (
+				87C622538B3F85B0D5DEAB9E /* UpdateController.swift */,
+			);
+			path = Updates;
 			sourceTree = "<group>";
 		};
 		D997EA5CCE4BEF76567A9A7B /* Products */ = {
@@ -246,6 +257,7 @@
 				F3F433CD8276ADA1D799E251 /* SettingsView.swift in Sources */,
 				C80FC2E78FBF686CF8B93DCC /* StatusItemMenu.swift in Sources */,
 				21B7C5D89D842F25B31AB072 /* Theme.swift in Sources */,
+				15ACB5732F72327BCF09E56A /* UpdateController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -15,7 +15,7 @@ Control your Apple TV from your Mac, just like the Remote in Control Center on i
 
 Clickr lives in your menu bar. Click the little remote, and you get a full Apple TV remote: a clickpad, Back, Home, Play/Pause, volume, a text box for typing into search fields, and a card showing what's playing. You can also drive it entirely from your keyboard.
 
-It's free, it's open source, and it talks only to your Apple TV. No accounts, no cloud, no tracking.
+It's free and open source. It talks to your Apple TV directly over your home network, with no accounts, no cloud and no tracking. The only other thing it ever contacts is GitHub, to check for new versions, and only if you say yes.
 
 ## Features
 
@@ -27,6 +27,7 @@ It's free, it's open source, and it talks only to your Apple TV. No accounts, no
 - **Several Apple TVs:** switch between them from the remote, and pick which one Clickr starts with.
 - **Looks at home on your Mac:** Liquid Glass on macOS 26 and later, and a classic dark look on macOS 14 and 15.
 - **Quick and private:** connects directly over your home network and keeps its pairing key in your Mac's Keychain.
+- **Update checks:** optionally checks GitHub once a day and tells you when a new version is out.
 
 ## Requirements
 
@@ -48,6 +49,10 @@ Clickr is a free hobby project, so it isn't signed with a paid Apple Developer I
 - **macOS 14 Sonoma:** right-click (or Control-click) Clickr in Applications, choose **Open**, then click **Open** again.
 
 If you'd rather check the code yourself first, it's all here, and you can [build it from source](#building-from-source).
+
+### Update checks
+
+Shortly after the first launch, Clickr asks whether it should **check for updates automatically**. If you say yes, it asks GitHub about once a day whether there's a newer release. When there is, you'll see **Update Available** at the top of the right-click menu and in Settings, and clicking it opens the release page so you can download it. Clickr never downloads or installs anything by itself.
 
 ### Allow local network access
 
@@ -105,7 +110,7 @@ You can also set a **global shortcut** in Settings to open the remote from any a
 
 ### The right-click menu
 
-Right-click (or Control-click) the menu bar icon for **Settings…** and **Quit Clickr**.
+Right-click (or Control-click) the menu bar icon for **Settings…** and **Quit Clickr**. When a new version is out, **Update Available** shows up there too.
 
 ## Settings
 
@@ -121,6 +126,7 @@ Right-click the menu bar icon and choose **Settings…**.
 - **Default Apple TV:** start with the TV you used last, or always a specific one.
 - **Paired Apple TVs:** see which TVs Clickr is paired with, and **Forget** one if you want to.
 - **Open the remote:** record a global keyboard shortcut (it needs ⌘, ⌥ or ⌃).
+- **Updates:** turn automatic update checks on or off, see whether you're up to date, check now, or download a new version.
 
 ## On macOS 14 and 15
 
@@ -153,12 +159,19 @@ It only appears while something is playing or paused with something loaded. If y
 **Volume buttons don't change the volume.**
 Clickr sends the same volume command as the Siri Remote, so it works when your Apple TV controls your TV's or receiver's volume (through HDMI-CEC or IR). Check **Settings > Remotes and Devices > Volume Control** on the Apple TV.
 
+**"Couldn't reach GitHub" next to updates.**
+Your Mac was offline or GitHub was unreachable. Clickr tries again later, or you can click **Check Now**. The remote itself doesn't need the internet.
+
 **How do I remove Clickr completely?**
 In Clickr's Settings, **Forget** each Apple TV, then quit Clickr and drag it to the Trash. On each Apple TV, remove Clickr under **Settings > Remotes and Devices**.
 
 ## Privacy
 
-Clickr talks only to your Apple TV, directly over your local network. It doesn't use the internet, has no accounts, no analytics, and no crash reporting. The only thing it stores is the pairing key for each Apple TV, kept in your Mac's Keychain, plus a few preferences.
+Clickr talks to your Apple TV directly over your local network. It has no accounts, no analytics and no crash reporting.
+
+The only time it uses the internet is the optional update check. If you turn it on, Clickr asks GitHub's public API (`api.github.com`) about once a day for the latest Clickr release. Like any web request, that tells GitHub your IP address; the only thing about the app it sends is a "Clickr" User-Agent with the version number. Nothing about you, your Mac or your Apple TV is included. You can turn it off anytime in Settings.
+
+What Clickr stores: the pairing key for each Apple TV (in your Mac's Keychain) and a few preferences.
 
 ## How it works
 

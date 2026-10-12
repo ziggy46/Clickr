@@ -4,6 +4,7 @@ import SwiftUI
 struct ClickrApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = RemoteViewModel()
+    @State private var updates = UpdateController()
     @AppStorage(AppSettings.hideIconWithoutAppleTV) private var hideIconWithoutAppleTV = false
 
     init() {
@@ -18,13 +19,14 @@ struct ClickrApp: App {
         MenuBarExtra(isInserted: iconIsShown) {
             RemotePopover(model: model)
         } label: {
-            MenuBarLabel(model: model)
+            MenuBarLabel(model: model, updates: updates)
         }
         .menuBarExtraStyle(.window)
 
         Settings {
-            SettingsView(model: model)
+            SettingsView(model: model, updates: updates)
         }
+        .windowResizability(.contentSize)
     }
 
     private var iconIsShown: Binding<Bool> {
@@ -48,12 +50,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// right-click menu (which is AppKit and can't reach the environment itself).
 private struct MenuBarLabel: View {
     let model: RemoteViewModel
+    let updates: UpdateController
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         MenuBarIcon(state: model.connectionState)
             .onAppear {
                 StatusItemMenu.openSettings = { openSettings() }
+                updates.start()
                 #if DEBUG
                 PreviewWindow.showIfRequested(model: model)
                 if UserDefaults.standard.bool(forKey: "ClickrPreviewOpenSettings") {
