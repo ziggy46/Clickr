@@ -121,6 +121,12 @@ final class RemoteViewModel {
             return true
         } catch PairSetup.PairingError.wrongPIN {
             pairingMessage = "That code didn't match. Try again."
+        } catch let error as KeychainCredentialStore.KeychainError {
+            // The TV did pair; only saving failed. Starting over would just leave another
+            // pairing on the TV, so stop here.
+            log.error("Paired, but saving failed: \(error.status)")
+            pairingMessage = "Paired, but couldn't save the pairing key to the Keychain."
+            return false
         } catch {
             log.error("Pairing failed: \(String(describing: error), privacy: .public)")
             pairingMessage = "Pairing didn't work. Try again with the new code."

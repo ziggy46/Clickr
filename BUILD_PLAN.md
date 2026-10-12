@@ -156,6 +156,8 @@ Pairing data travels as TLV8 inside OPACK, e.g. `{"_pd": <tlv>, "_pwTy": 1}` ✓
   - Our pairing ID is a random UUID string, like pyatv. M5 includes the name tag (`0x11`) as OPACK `{"name": "Clickr"}`, so the TV lists the remote as "Clickr" (pyatv sends "pyatv").
   - pyatv doesn't check the TV's signature in M6. We check it against HAP's `Pair-Setup-Accessory-Sign-Salt/Info` and only log a mismatch, because the M6 channel is already authenticated by the M4 proof and pair-verify checks the TV's key on every connect. Whether a real Apple TV passes this check is logged during the first real pairing.
   - A wrong PIN (error `0x02` in M4) or any other failure ends the attempt; the app starts a new one right away, so the TV shows a new PIN.
+  - If the Keychain save fails after M6, the TV is already paired, so the app shows an error and does not start a new pairing (that would leave more pairing records on the TV).
+  - Known gap: `AppleTVSession` treats any Keychain read error (for example a denied access prompt) as "not paired", which opens the pairing flow. Revisit in Milestone 6.
   - Credentials are stored as a generic password (service `com.ziggy46.clickr.pairing`, account = the TV's `rpMRtID`) in the login Keychain. Debug builds are ad-hoc signed, so macOS asks for Keychain access again after a rebuild; choose Always Allow. A Developer ID build (Milestone 11) won't ask.
 
 **Pair-verify (every connect)**
