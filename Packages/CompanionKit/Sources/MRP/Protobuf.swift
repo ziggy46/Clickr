@@ -149,6 +149,27 @@ public struct ProtoMessage: Sendable, Equatable {
         data(number).flatMap { try? ProtoMessage(decoding: $0) }
     }
 
+    /// Every value of a repeated double field, whether it was written one value per field
+    /// or packed into a single bytes field.
+    public func doubles(_ number: Int) -> [Double] {
+        fields.flatMap { field -> [Double] in
+            guard field.number == number else { return [] }
+            switch field.value {
+            case .fixed64(let bits):
+                return [Double(bitPattern: bits)]
+            case .bytes(let data):
+                let bytes = Array(data)
+                guard bytes.count % 8 == 0 else { return [] }
+                return stride(from: 0, to: bytes.count, by: 8).map { start in
+                    let bits = bytes[start..<start + 8].enumerated().reduce(UInt64(0)) { $0 | UInt64($1.element) << (8 * $1.offset) }
+                    return Double(bitPattern: bits)
+                }
+            default:
+                return []
+            }
+        }
+    }
+
     /// Every occurrence of a repeated message field.
     public func messages(_ number: Int) -> [ProtoMessage] {
         fields.compactMap { field in

@@ -31,6 +31,8 @@ public actor AppleTVSession {
         case notPairing
         /// A command was sent while not connected.
         case notConnected
+        /// The playing app doesn't support that playback control right now.
+        case unsupported
         /// The TV didn't answer in time.
         case timeout
         /// The TV answered with a frame we didn't expect.
@@ -72,6 +74,13 @@ public actor AppleTVSession {
     /// `currentText` is what we believe is in the field.
     private var textSession: TextInputArchive.Session?
     private var updateContinuations: [UUID: AsyncStream<TVUpdate>.Continuation] = [:]
+
+    // Touch: `_touchStart` at connect sets the clock that `_hidT` timestamps count from.
+    // Touches go out one at a time, in order; while one is being written, newer moves
+    // replace queued ones so a slow connection doesn't build up a backlog.
+    private var touchOrigin: ContinuousClock.Instant?
+    private var touchQueue: [(event: TouchEvent, nanoseconds: UInt64)] = []
+    private var isSendingTouches = false
 
     // Now playing comes over a separate AirPlay connection (MRP tunnel). It's optional:
     // if it fails the remote works the same, and it retries in the background.
@@ -186,8 +195,9 @@ public actor AppleTVSession {
         await connection?.enableEncryption(outputKey: keys.output, inputKey: keys.input)
         isMessaging = true
 
-        // The same opening pyatv uses (minus touch and text input, which come later).
+        // The same opening pyatv uses (text input comes later).
         _ = try await request("_systemInfo", Self.systemInfo(for: credentials))
+        await startTouch()
         let localSID = UInt64(UInt32.random(in: .min ... .max))
         _ = try await request("_sessionStart", ["_srvT": "com.apple.tvremoteservices", "_sid": .int(localSID)])
         do {
@@ -205,6 +215,19 @@ public actor AppleTVSession {
         setState(.connected)
         if case .hostPort(let host, _)? = await connection?.remoteEndpoint {
             startNowPlaying(credentials: credentials, host: host)
+        }
+    }
+
+    /// Tells the TV we'll send touches on a 1000 x 1000 pad. Swiping is extra, so if the TV
+    /// refuses, the remote carries on without it.
+    private func startTouch() async {
+        touchOrigin = nil
+        touchQueue = []
+        do {
+            _ = try await request("_touchStart", ["_height": 1000.0, "_tFl": 0, "_width": 1000.0])
+            touchOrigin = .now
+        } catch {
+            log.info("_touchStart failed, so no swiping: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -282,6 +305,51 @@ public actor AppleTVSession {
         }
         lastPress = press
         try await press.value
+    }
+
+    /// Whether swipes can be sent (connected, and the TV accepted `_touchStart`).
+    public var acceptsTouches: Bool { currentState == .connected && touchOrigin != nil }
+
+    /// Sends touches from a swipe. Returns right away; they go out in order in the
+    /// background, stamped with when they happened.
+    public func touch(_ events: [TouchEvent]) {
+        guard acceptsTouches, let touchOrigin, !events.isEmpty else { return }
+        let elapsed = ContinuousClock.now - touchOrigin
+        let nanoseconds = UInt64(max(0, elapsed.components.seconds)) * 1_000_000_000
+            + UInt64(max(0, elapsed.components.attoseconds) / 1_000_000_000)
+        for event in events {
+            if event.phase == .hold, let last = touchQueue.last, last.event.phase == .hold {
+                touchQueue[touchQueue.count - 1] = (event, nanoseconds)
+            } else {
+                touchQueue.append((event, nanoseconds))
+            }
+        }
+        guard !isSendingTouches else { return }
+        isSendingTouches = true
+        Task { await sendQueuedTouches() }
+    }
+
+    private func sendQueuedTouches() async {
+        while !touchQueue.isEmpty {
+            let (event, nanoseconds) = touchQueue.removeFirst()
+            do {
+                try await sendEvent("_hidT", [
+                    "_ns": .int(nanoseconds), "_tFg": 1, "_cx": .int(UInt64(event.x)),
+                    "_tPh": .int(UInt64(event.phase.rawValue)), "_cy": .int(UInt64(event.y)),
+                ])
+            } catch {
+                touchQueue = []
+            }
+        }
+        isSendingTouches = false
+    }
+
+    /// A now playing control: play/pause, skip, next or previous, or seek. Sent over the
+    /// AirPlay tunnel, which is what supplies the now playing card in the first place.
+    public func perform(_ action: PlaybackAction) async throws {
+        guard currentState == .connected, let airPlay, let nowPlaying else { throw SessionError.notConnected }
+        guard let request = action.request(for: nowPlaying) else { throw SessionError.unsupported }
+        try await airPlay.sendCommand(request.command, skipInterval: request.skipInterval, playbackPosition: request.position)
     }
 
     /// Wakes the TV or puts it to sleep. Like pyatv, this sends only the button-up half of
@@ -613,6 +681,8 @@ public actor AppleTVSession {
     /// Closes on purpose. No reconnect.
     private func close() {
         stopNowPlaying()
+        touchOrigin = nil
+        touchQueue = []
         guard let connection else { return }
         self.connection = nil
         isMessaging = false
@@ -625,6 +695,8 @@ public actor AppleTVSession {
         guard source === connection else { return }
         connection = nil
         stopNowPlaying()
+        touchOrigin = nil
+        touchQueue = []
         failWaiters(error)
         if isMessaging {
             isMessaging = false

@@ -35,6 +35,10 @@ final class FakeAppleTV: @unchecked Sendable {
     private(set) var requests: [String] = []
     /// `_hidC` commands as (state, code): 1 = down, 2 = up.
     private(set) var hidCommands: [(state: UInt64, code: UInt64)] = []
+    /// `_hidT` touch events as (phase, x, y, ns).
+    private(set) var touches: [(phase: UInt64, x: UInt64, y: UInt64, ns: UInt64)] = []
+    /// Answer `_touchStart` with an error, like a TV that doesn't do touch.
+    var rejectsTouchStart = false
 
     private var clientLTPK: Data?
     private var clientID: Data?
@@ -59,12 +63,13 @@ final class FakeAppleTV: @unchecked Sendable {
         let name: String?
         let fieldText: String
         let textOperations: [String]
+        let touches: [(phase: UInt64, x: UInt64, y: UInt64, ns: UInt64)]
     }
 
     /// What the TV has recorded so far, read on its queue.
     func snapshot() -> Snapshot {
         queue.sync {
-            Snapshot(requests: requests, hid: hidCommands, name: pairedName, fieldText: fieldText, textOperations: textOperations)
+            Snapshot(requests: requests, hid: hidCommands, name: pairedName, fieldText: fieldText, textOperations: textOperations, touches: touches)
         }
     }
 
@@ -315,6 +320,9 @@ final class FakeAppleTV: @unchecked Sendable {
                 if identifier == "_interest", case .array(let names)? = message["_c"]?["_regEvents"] {
                     tv.registeredEvents += names.compactMap(\.stringValue)
                 }
+                if identifier == "_hidT", let touch = message["_c"] {
+                    tv.touches.append((touch["_tPh"]?.intValue ?? 0, touch["_cx"]?.intValue ?? 0, touch["_cy"]?.intValue ?? 0, touch["_ns"]?.intValue ?? 0))
+                }
                 return
             }
             tv.requests.append(identifier)
@@ -326,6 +334,9 @@ final class FakeAppleTV: @unchecked Sendable {
                 content = ["_tiD": .data(tv.textSessionArchive())]
             case "FetchAttentionState":
                 content = ["state": .int(tv.isAsleep ? 1 : 3)]
+            case "_touchStart" where tv.rejectsTouchStart:
+                send(type: .eOPACK, ["_em": "not supported", "_ec": 1, "_t": 3, "_x": xid], encrypted: true)
+                return
             case "_hidC":
                 tv.hidCommands.append((message["_c"]?["_hBtS"]?.intValue ?? 0, message["_c"]?["_hidC"]?.intValue ?? 0))
             default:

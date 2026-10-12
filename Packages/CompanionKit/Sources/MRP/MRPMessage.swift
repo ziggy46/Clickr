@@ -5,6 +5,8 @@ import Foundation
 public struct MRPMessage: Sendable, Equatable {
     /// ProtocolMessage.Type values used here, with the extension field each one uses.
     public enum Kind: Int, Sendable {
+        case sendCommand = 1
+        case sendCommandResult = 2
         case setState = 4
         case deviceInfo = 15
         case clientUpdatesConfig = 16
@@ -22,6 +24,8 @@ public struct MRPMessage: Sendable, Equatable {
 
         var extensionField: Int? {
             switch self {
+            case .sendCommand: 6
+            case .sendCommandResult: 7
             case .setState: 9
             case .deviceInfo, .deviceInfoUpdate: 20
             case .clientUpdatesConfig: 21
@@ -113,6 +117,21 @@ public enum MRPRequests {
         message.bool(3, true)   // volumeUpdates
         message.bool(4, true)   // keyboardUpdates
         message.bool(5, true)   // outputDeviceUpdates
+        return message
+    }
+
+    /// A playback command. Options are only included when the command takes one, as in
+    /// pyatv: `skipInterval` (seconds, a float) for skips, `playbackPosition` (seconds, a
+    /// double) for seeking.
+    public static func sendCommand(_ command: PlaybackCommand, skipInterval: Float? = nil, playbackPosition: Double? = nil) -> ProtoWriter {
+        var message = ProtoWriter()
+        message.varint(1, UInt64(command.rawValue))
+        if skipInterval != nil || playbackPosition != nil {
+            var options = ProtoWriter()
+            if let skipInterval { options.float(5, skipInterval) }
+            if let playbackPosition { options.double(9, playbackPosition) }
+            message.message(2, options)
+        }
         return message
     }
 

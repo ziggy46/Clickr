@@ -44,8 +44,46 @@ private func pairedSession() async throws -> (FakeAppleTV, AppleTVSession) {
 
         await session.connect()
         #expect(await waitFor(.connected, in: session))
-        #expect(tv.snapshot().requests == ["_systemInfo", "_sessionStart", "TVRCSessionStart", "FetchAttentionState", "_tiStart"])
+        #expect(tv.snapshot().requests == ["_systemInfo", "_touchStart", "_sessionStart", "TVRCSessionStart", "FetchAttentionState", "_tiStart"])
         #expect(tv.events == ["SystemStatus", "TVSystemStatus"])
+        await session.disconnect()
+    }
+
+    @Test func sendsTouchesInOrder() async throws {
+        let (tv, session) = try await pairedSession()
+        defer { tv.stop() }
+        await session.connect()
+        #expect(await waitFor(.connected, in: session))
+        #expect(await session.acceptsTouches)
+
+        var gesture = TouchpadGesture()
+        await session.touch(gesture.begin())
+        await session.touch(gesture.move(dx: 0, dy: -40))
+        await session.touch(gesture.end())
+
+        let deadline = ContinuousClock.now + .seconds(10)
+        while tv.snapshot().touches.count < 3, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        let touches = tv.snapshot().touches
+        #expect(touches.map(\.phase) == [1, 3, 4])
+        #expect(touches.map(\.x) == [500, 500, 500])
+        #expect(touches.map(\.y) == [500, 400, 400])
+        #expect(touches.map(\.ns) == touches.map(\.ns).sorted())
+        await session.disconnect()
+    }
+
+    @Test func connectsWithoutTouchWhenTheTVRefusesIt() async throws {
+        let (tv, session) = try await pairedSession()
+        defer { tv.stop() }
+        tv.rejectsTouchStart = true
+        await session.connect()
+        #expect(await waitFor(.connected, in: session))
+        #expect(await !session.acceptsTouches)
+        // Touches are dropped quietly; buttons still work.
+        await session.touch([TouchEvent(.press, x: 500, y: 500)])
+        try await session.press(.select)
+        #expect(tv.snapshot().touches.isEmpty)
         await session.disconnect()
     }
 

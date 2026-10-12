@@ -24,12 +24,14 @@ public struct NowPlaying: Sendable, Equatable {
     public var itemID: String?
     /// Where the item sits in the queue (for the artwork request).
     public var location: Int
+    /// The playback commands the app reported, for the card's controls.
+    public var commands: [PlaybackCommand: CommandInfo]
 
     public init(
         state: State, title: String? = nil, artist: String? = nil, album: String? = nil, seriesName: String? = nil,
         appName: String? = nil, bundleID: String? = nil, duration: Double? = nil, elapsed: Double? = nil,
         elapsedTimestamp: Date? = nil, playbackRate: Float? = nil, artworkAvailable: Bool = false,
-        itemID: String? = nil, location: Int = 0
+        itemID: String? = nil, location: Int = 0, commands: [PlaybackCommand: CommandInfo] = [:]
     ) {
         self.state = state
         self.title = title
@@ -45,6 +47,12 @@ public struct NowPlaying: Sendable, Equatable {
         self.artworkAvailable = artworkAvailable
         self.itemID = itemID
         self.location = location
+        self.commands = commands
+    }
+
+    /// Whether the app currently accepts `command`.
+    public func supports(_ command: PlaybackCommand) -> Bool {
+        commands[command]?.enabled == true
     }
 
     /// The position now, moving on from the last report while playing (as pyatv does).
@@ -63,12 +71,15 @@ public struct NowPlayingTracker: Sendable {
         var playbackState: UInt64?
         var items: [ProtoMessage] = []
         var location = 0
+        var supportedCommands: [ProtoMessage] = []
     }
 
     private struct Client: Sendable {
         var displayName: String?
         var players: [String: Player] = [:]
         var activePlayerID: String?
+        /// SetDefaultSupportedCommands: used for commands the player doesn't list itself.
+        var defaultCommands: [ProtoMessage] = []
     }
 
     private static let defaultPlayer = "MediaRemote-DefaultPlayer"
@@ -87,6 +98,8 @@ public struct NowPlayingTracker: Sendable {
             let path = inner.message(9)
             update(path) { player in
                 if let state = inner.uint(6) { player.playbackState = state }
+                // Most SetStates leave this out; only replace the list when it's there.
+                if inner.has(2) { player.supportedCommands = inner.message(2)?.messages(1) ?? [] }
                 if let queue = inner.message(3) {
                     player.items = queue.messages(2)
                     player.location = Int(queue.int(1) ?? 0)
@@ -104,6 +117,9 @@ public struct NowPlayingTracker: Sendable {
                     }
                 }
             }
+        case .setDefaultSupportedCommands:
+            let id = clientID(for: inner.message(9)?.message(2))
+            clients[id]?.defaultCommands = inner.message(2)?.messages(1) ?? []
         case .setNowPlayingClient:
             guard let client = inner.message(1) else { return false }
             activeClientID = clientID(for: client)
@@ -166,11 +182,22 @@ public struct NowPlayingTracker: Sendable {
             playbackRate: metadata?.float(39),
             artworkAvailable: metadata?.bool(19) == true || metadata?.has(70) == true,
             itemID: item?.string(1),
-            location: player.location
+            location: player.location,
+            commands: Self.commands(player: player.supportedCommands, client: client.defaultCommands)
         )
     }
 
     // MARK: - Helpers
+
+    /// pyatv takes the first match in the player's list, then the client's defaults.
+    /// Applying both in reverse leaves exactly those entries in the dictionary.
+    private static func commands(player: [ProtoMessage], client: [ProtoMessage]) -> [PlaybackCommand: CommandInfo] {
+        var result: [PlaybackCommand: CommandInfo] = [:]
+        for message in (player + client).reversed() {
+            if let (command, info) = CommandInfo.parse(message) { result[command] = info }
+        }
+        return result
+    }
 
     /// Clients are keyed by bundle identifier only (the origin is ignored, as in pyatv).
     /// The first time a client is seen, its display name is recorded.

@@ -133,6 +133,7 @@ OPACK_MESSAGES = {
     "app_list_as_array": {"_t": 3, "_c": {"apps": [{"name": n, "id": b} for b, n in APPS[:4]]}},
     "media_control_volume": request("_mcc", {"_mcc": 6, "_vol": 0.5}, 11),
     "text_input_start": request("_tiStart", {}, 12),
+    "touch_start": request("_touchStart", {"_height": 1000.0, "_tFl": 0, "_width": 1000.0}, 13),
     "error_reply": {"_em": "Unsupported command", "_ec": 1, "_t": 3, "_x": 13},
     "repeated_values": ["foo", "bar", "foo", "bar", b"\x01\x02", b"\x01\x02", 1000, 1000, 2.5, 2.5],
     "endless_array": [f"item{i % 5}" for i in range(20)],
@@ -708,6 +709,45 @@ def mrp_vectors():
     art_item.artworkDataHeight = 288
     artwork = fixed(artwork_reply, "44444444-4444-4444-4444-444444444444")
 
+    # Playback commands, built the way pyatv's remote control builds them.
+    from pyatv.protocols.mrp.protobuf import CommandInfo_pb2 as commands
+    command_messages = {
+        "toggle_play_pause": fixed(messages.command(commands.TogglePlayPause), "55555555-5555-5555-5555-555555555555"),
+        "skip_forward_15": fixed(messages.command(commands.SkipForward, skipInterval=15), "66666666-6666-6666-6666-666666666666"),
+        "skip_backward_10": fixed(messages.command(commands.SkipBackward, skipInterval=10), "77777777-7777-7777-7777-777777777777"),
+        "next_track": fixed(messages.command(commands.NextTrack), "88888888-8888-8888-8888-888888888888"),
+        "seek_to_123_5": fixed(messages.seek_to_position(123.5), "99999999-9999-9999-9999-999999999999"),
+    }
+    result = messages.command_result("55555555-5555-5555-5555-555555555555")
+    command_result = fixed(result)
+
+    # A SetState that lists the player's supported commands, and a client's defaults.
+    with_commands = messages.create(pb.SET_STATE_MESSAGE)
+    commands_inner = pb.extract_inner(with_commands)
+    commands_inner.playerPath.client.bundleIdentifier = "com.example.video"
+    commands_inner.playerPath.player.identifier = "MediaRemote-DefaultPlayer"
+    for command, enabled, intervals in [
+        (commands.TogglePlayPause, True, []),
+        (commands.SkipForward, True, [15.0, 30.0]),
+        (commands.SkipBackward, False, [15.0]),
+        (commands.SeekToPlaybackPosition, True, []),
+        (commands.Stop, True, []),
+    ]:
+        info = commands_inner.supportedCommands.supportedCommands.add()
+        info.command = command
+        info.enabled = enabled
+        info.preferredIntervals.extend(intervals)
+    set_state_commands = fixed(with_commands)
+
+    defaults = messages.create(pb.SET_DEFAULT_SUPPORTED_COMMANDS_MESSAGE)
+    defaults_inner = pb.extract_inner(defaults)
+    defaults_inner.playerPath.client.bundleIdentifier = "com.example.video"
+    for command in (commands.NextTrack, commands.SkipBackward):
+        info = defaults_inner.supportedCommands.supportedCommands.add()
+        info.command = command
+        info.enabled = True
+    default_commands = fixed(defaults)
+
     # HAP framing: 1500 bytes splits into a 1024-byte and a 476-byte block.
     out_key, in_key = fixed_bytes(60, 32), fixed_bytes(61, 32)
     session = HAPSession()
@@ -730,6 +770,10 @@ def mrp_vectors():
         "handshake": handshake,
         "set_state": set_state,
         "artwork_reply": artwork,
+        "commands": command_messages,
+        "command_result": command_result,
+        "set_state_commands": set_state_commands,
+        "default_commands": default_commands,
         "hap_out_key": out_key.hex(),
         "hap_in_key": in_key.hex(),
         "hap_plaintext": plaintext.hex(),
