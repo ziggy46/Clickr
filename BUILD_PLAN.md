@@ -286,7 +286,7 @@ Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
 | Disconnected | Icon at **40% opacity** |
 | Connected | Icon at 100% |
 | Open (popover showing) | Highlight drawn by the system. On macOS 26 it's the glass capsule; on older versions the standard menu bar highlight. Don't custom-draw it. |
-| Needs pairing | Icon plus a **5 pt-radius dot**, top-right (offset ≈ x +8, y +5 on a 56 × 48 test tile; scale to the 11 × 19 icon so the dot touches the body's top-right corner). Design color is blue `#0A84FF` (dark) / `#0A6CFF` (light). |
+| Needs pairing | Icon plus a **5 pt-radius dot**, top-right (offset ≈ x +8, y +5 on a 56 × 48 test tile; scale to the 11 × 19 icon so the dot touches the body's top-right corner). Design color is blue `#0A84FF` (dark) / `#0A6CFF` (light). *(Changed 2026-10-12, 0.2.1: uses the system accent color instead; blue with Multicolor.)* |
 
 **Shipped (Milestone 8):** the composited non-template `NSImage`. The remote is tinted at draw time with the label color for the current appearance and the dot is drawn in the blue for that appearance. It renders correctly on light and dark backgrounds in the debug icon dump, but the real menu bar applies its own vibrancy, so it still needs a look on a light and a dark menu bar. The dot is read as **5 pt across** at menu bar size (a 5 pt radius would be wider than the 11 pt icon), centered on the body's top-right corner; the canvas is 1 pt wider than the icon so the dot isn't clipped.
 
@@ -334,7 +334,7 @@ Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
   - Icon: chevrons at **22 pt**, stroke weight ≈ semibold. Use `chevron.up/down/left/right`.
   - No visible background.
 - Center **OK** button:
-  - Circle **88** diameter, `.buttonStyle(.glassProminent)` tinted blue `rgba(10,110,255,0.62)`. Use `.tint(Color(red: 10/255, green: 110/255, blue: 1).opacity(0.62))`.
+  - Circle **88** diameter, `.buttonStyle(.glassProminent)` tinted blue `rgba(10,110,255,0.62)`. Use `.tint(Color(red: 10/255, green: 110/255, blue: 1).opacity(0.62))`. *(Changed 2026-10-12, 0.2.1: uses the system accent color instead; blue with Multicolor.)*
   - Label "OK" at **16 semibold**.
 - **Gestures**: a click on an arrow presses that direction. Drag/swipe on the ring (≥ 30 pt travel) sends the matching direction, once per swipe.
 
@@ -378,8 +378,8 @@ The same structure and order as 5.2, with these differences:
 | Device name | 15 semibold |
 | Secondary text | `#A1A1A6` |
 | Switcher | 36 × 36, radius 9, transparent, icon `#A1A1A6` |
-| Now playing card | Padding 10, radius 10, white 6% fill; artwork 36 × 36 radius 6 `#4A5A6A`; progress 3 pt, track white 16%, fill `#0A84FF` |
-| Clickpad | 220 diameter, fill `#353539`, 1 pt white 8% border; arrows 44 × 44 inset 6; OK 84 diameter fill `#46464C`, 15 semibold |
+| Now playing card | Padding 10, radius 10, white 6% fill; artwork 36 × 36 radius 6 `#4A5A6A`; progress 3 pt, track white 16%, fill `#0A84FF` *(Changed 2026-10-12, 0.2.1: uses the system accent color instead; blue with Multicolor.)* |
+| Clickpad | 220 diameter, fill `#353539`, 1 pt white 8% border; arrows 44 × 44 inset 6; OK 84 diameter fill `#46464C`, 15 semibold *(Changed 2026-10-12, 0.2.1: OK is filled with the system accent color at 85%, like the Pair button.)* |
 | Button row | Height 58, radius 14, fill `#3A3A3F`, label color `#D1D1D6` |
 | Volume pill | Height 44, radius 14, fill `#3A3A3F` |
 | Text field | Height 36, radius 10, padding 12, fill `#1F1F23`, border white 14% |
@@ -395,13 +395,13 @@ Shown in place of the remote when the state is `.needsPairing`, inside the same 
 - **Body**: "Enter the 4-digit code shown on your TV." at **13**, white 80%.
 - **PIN boxes**: 4 boxes, HStack spacing **10**.
   - Each box **54 × 62**, radius **18**, fill black 26%, 1 pt white 26% border, digit at **28 semibold**, centered.
-  - Focused box: **2 pt `#4DA3FF`** border plus a 3 pt outer ring at `#4DA3FF` 28%.
+  - Focused box: **2 pt `#4DA3FF`** border plus a 3 pt outer ring at `#4DA3FF` 28%. *(Changed 2026-10-12, 0.2.1: uses the system accent color instead; blue with Multicolor.)*
   - Typing advances focus; Delete goes back; paste of 4 digits fills all boxes.
 - **Pair button**:
-  - Full width, height **44**, capsule, `.buttonStyle(.glassProminent)` tinted `rgba(10,100,235,0.85)`, label **14 semibold**.
+  - Full width, height **44**, capsule, `.buttonStyle(.glassProminent)` tinted `rgba(10,100,235,0.85)`, label **14 semibold**. *(Changed 2026-10-12, 0.2.1: the system accent color at 85%.)*
   - Disabled until 4 digits are entered.
   - Shows a spinner while verifying.
-- **Cancel button**: full width, height **40**, plain, text `#A9D2FF` at **14**.
+- **Cancel button**: full width, height **40**, plain, text `#A9D2FF` at **14**. *(Changed 2026-10-12, 0.2.1: the accent color mixed 60% with white on macOS 15+, the plain accent color on 14.)*
 - **Footnote**: "You only do this once. The pairing key stays in your Mac's Keychain." at **11**, white 78%.
 - **Wrong PIN**: shake the boxes, clear them, then show "That code didn't match. Try again." in the body line.
 

@@ -64,7 +64,7 @@ struct Clickpad: View {
         if theme.isGlass, #available(macOS 26, *) {
             button.buttonStyle(GlassControlStyle(tint: Color.accentColor.opacity(0.62)))
         } else {
-            button.buttonStyle(FilledButtonStyle(fill: Color(hex: 0x46464C), radius: nil))
+            button.buttonStyle(FilledButtonStyle(fill: Color.accentColor.opacity(0.85), radius: nil))
         }
     }
 
