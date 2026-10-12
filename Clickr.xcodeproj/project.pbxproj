@@ -16,6 +16,7 @@
 		57EA90EBB77688D343EDD6A8 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */; };
 		62E58754EDC2492389D41075 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B56458A94B00FC1C6EAF0D3 /* Controls.swift */; };
 		6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */; };
+		704BB432C7ED4E88B281E06C /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947C7F5A9374B54CA64530A6 /* AppSettings.swift */; };
 		8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */; };
 		BD9E386D9EE5FEC1D0A02145 /* RemoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201189B612BC49040F04E5CB /* RemoteViewModel.swift */; };
 		C574A441A87994A166C8C670 /* FallbackRemoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B93D5D0F81566F13050D20 /* FallbackRemoteView.swift */; };
@@ -46,6 +47,7 @@
 		7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
 		7B56458A94B00FC1C6EAF0D3 /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
 		84775BEDFDD829EFA4672DDF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		947C7F5A9374B54CA64530A6 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		9DBA38FE8D501BB5E94BD53A /* DeviceHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeader.swift; sourceTree = "<group>"; };
 		A80C987B347BB14F4C7F1F55 /* ClickrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickrApp.swift; sourceTree = "<group>"; };
 		AEA812B5B15FFCA8454605F3 /* KeyboardShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcuts.swift; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 		F8739709890D28C13256D326 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				947C7F5A9374B54CA64530A6 /* AppSettings.swift */,
 				1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */,
 				7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */,
 				84775BEDFDD829EFA4672DDF /* SettingsView.swift */,
@@ -212,6 +215,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				704BB432C7ED4E88B281E06C /* AppSettings.swift in Sources */,
 				E412606497D3FF0D34EC2A08 /* Clickpad.swift in Sources */,
 				8879F698CAA1D6F645BBE621 /* ClickrApp.swift in Sources */,
 				62E58754EDC2492389D41075 /* Controls.swift in Sources */,

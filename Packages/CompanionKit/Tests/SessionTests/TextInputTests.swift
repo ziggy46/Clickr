@@ -114,7 +114,9 @@ private func eventually(_ condition: () -> Bool) async -> Bool {
     @Test func picksUpTextAlreadyOnTheTV() async throws {
         let (tv, session) = try await connectedSession()
         defer { tv.stop() }
-        tv.setFieldText("Sta")
+        var updates = await session.updates.makeAsyncIterator()
+        tv.showKeyboard(text: "Sta")
+        #expect(await updates.next() == .keyboardShown(text: "Sta"))
 
         try await session.sendText("Star")
         #expect(await eventually { tv.snapshot().textOperations == ["insert:r"] })
@@ -140,7 +142,9 @@ private func eventually(_ condition: () -> Bool) async -> Bool {
     @Test func noFocusedFieldThrows() async throws {
         let (tv, session) = try await connectedSession()
         defer { tv.stop() }
-        tv.hasTextField = false
+        var updates = await session.updates.makeAsyncIterator()
+        tv.hideKeyboard()
+        #expect(await updates.next() == .keyboardHidden)
 
         await #expect(throws: AppleTVSession.SessionError.noTextField) {
             try await session.sendText("hello")

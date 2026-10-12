@@ -7,6 +7,16 @@ import Pairing
 import Store
 import Transport
 
+/// Things the TV tells us while connected.
+public enum TVUpdate: Sendable, Equatable {
+    /// The TV went to sleep (true) or woke up (false).
+    case asleep(Bool)
+    /// A text field on the TV gained focus; `text` is what's already in it.
+    case keyboardShown(text: String)
+    /// The TV's text field lost focus.
+    case keyboardHidden
+}
+
 /// One Apple TV: pairing, the encrypted connection, and remote commands.
 public actor AppleTVSession {
     public enum SessionError: Error, Equatable {
@@ -51,6 +61,10 @@ public actor AppleTVSession {
     private var lastPress: Task<Void, Error>?
     private var desiredText: String?
     private var textUpdate: Task<Void, Error>?
+    /// The focused text field's session, kept current by `_tiStarted` / `_tiStopped` events.
+    /// `currentText` is what we believe is in the field.
+    private var textSession: TextInputArchive.Session?
+    private var updateContinuations: [UUID: AsyncStream<TVUpdate>.Continuation] = [:]
     private static let backoff: [Duration] = [.seconds(1), .seconds(2), .seconds(5), .seconds(10)]
 
     public init(device: DiscoveredDevice, store: CredentialStore) {
@@ -70,6 +84,25 @@ public actor AppleTVSession {
             Task { await self?.removeStateContinuation(id) }
         }
         return stream
+    }
+
+    /// Power and keyboard changes, while connected.
+    public var updates: AsyncStream<TVUpdate> {
+        let (stream, continuation) = AsyncStream.makeStream(of: TVUpdate.self)
+        let id = UUID()
+        updateContinuations[id] = continuation
+        continuation.onTermination = { [weak self] _ in
+            Task { await self?.removeUpdateContinuation(id) }
+        }
+        return stream
+    }
+
+    private func publish(_ update: TVUpdate) {
+        updateContinuations.values.forEach { $0.yield(update) }
+    }
+
+    private func removeUpdateContinuation(_ id: UUID) {
+        updateContinuations[id] = nil
     }
 
     // MARK: - Connecting
@@ -143,6 +176,7 @@ public actor AppleTVSession {
         } catch {
             log.debug("TVRCSessionStart not supported: \(String(describing: error), privacy: .public)")
         }
+        await startWatchingTV()
 
         guard wantsConnection else {
             close()
@@ -150,6 +184,41 @@ public actor AppleTVSession {
         }
         log.info("Connected to \(self.device.name, privacy: .public)")
         setState(.connected)
+    }
+
+    /// Asks for the power state and subscribes to changes, then starts the text input
+    /// session so the TV reports text fields gaining and losing focus. Like pyatv, none of
+    /// this is required for the remote to work, so failures are only logged.
+    private func startWatchingTV() async {
+        do {
+            let reply = try await request("FetchAttentionState", [:])
+            if let state = reply["_c"]?["state"]?.intValue {
+                publish(.asleep(state == 1))
+            }
+        } catch {
+            log.debug("FetchAttentionState failed: \(String(describing: error), privacy: .public)")
+        }
+        for event in ["SystemStatus", "TVSystemStatus"] {
+            try? await sendEvent("_interest", ["_regEvents": [.string(event)]])
+        }
+        do {
+            let reply = try await request("_tiStart", [:])
+            updateTextSession(from: reply["_c"])
+        } catch {
+            log.debug("_tiStart failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// Takes `_tiD` from a `_tiStart` reply or `_tiStarted` event. No `_tiD` means no field
+    /// has focus.
+    private func updateTextSession(from content: OPACKValue?) {
+        if let archive = content?["_tiD"]?.dataValue, let session = try? TextInputArchive.session(from: archive) {
+            textSession = session
+            publish(.keyboardShown(text: session.currentText))
+        } else {
+            textSession = nil
+            publish(.keyboardHidden)
+        }
     }
 
     /// Pair-verify failures that mean the TV forgot us or isn't the TV we paired with.
@@ -221,16 +290,15 @@ public actor AppleTVSession {
         }
     }
 
-    /// Like pyatv: restart the text session to read the field's current text, then insert
-    /// what's missing, or clear and retype if the text changed some other way.
+    /// Inserts what's missing from the focused field, or clears and retypes if the text
+    /// changed some other way. The field's session and text come from `_tiStarted` events;
+    /// if we have none yet, ask once with `_tiStart`.
     private func applyText(_ target: String) async throws {
         guard currentState == .connected else { throw SessionError.notConnected }
-        _ = try? await request("_tiStop", [:])
-        let reply = try await request("_tiStart", [:])
-        guard let archive = reply["_c"]?["_tiD"]?.dataValue,
-              let session = try TextInputArchive.session(from: archive) else {
-            throw SessionError.noTextField
+        if textSession == nil {
+            updateTextSession(from: try await request("_tiStart", [:])["_c"])
         }
+        guard let session = textSession else { throw SessionError.noTextField }
 
         if target.hasPrefix(session.currentText) {
             let missing = String(target.dropFirst(session.currentText.count))
@@ -242,6 +310,9 @@ public actor AppleTVSession {
             if !target.isEmpty {
                 try await sendEvent("_tiC", ["_tiV": 1, "_tiD": .data(TextInputArchive.insert(target, session: session.id))])
             }
+        }
+        if textSession?.id == session.id {
+            textSession = TextInputArchive.Session(id: session.id, currentText: target)
         }
     }
 
@@ -295,9 +366,25 @@ public actor AppleTVSession {
                 continuation.resume(returning: message)
             }
         case 1:
-            log.debug("Event \(message["_i"]?.stringValue ?? "?", privacy: .public)")
+            handleEvent(message["_i"]?.stringValue ?? "", content: message["_c"])
         default:
             log.debug("Ignoring message \(message["_i"]?.stringValue ?? "?", privacy: .public)")
+        }
+    }
+
+    private func handleEvent(_ identifier: String, content: OPACKValue?) {
+        switch identifier {
+        case "SystemStatus", "TVSystemStatus":
+            if let state = content?["state"]?.intValue {
+                publish(.asleep(state == 1))
+            }
+        case "_tiStarted":
+            updateTextSession(from: content)
+        case "_tiStopped":
+            textSession = nil
+            publish(.keyboardHidden)
+        default:
+            log.debug("Event \(identifier, privacy: .public)")
         }
     }
 
@@ -349,6 +436,7 @@ public actor AppleTVSession {
 
     private func open() async throws {
         close()
+        textSession = nil
         let connection = CompanionConnection(endpoint: device.endpoint)
         self.connection = connection
         bufferedFrames = []

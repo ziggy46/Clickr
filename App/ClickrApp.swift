@@ -2,7 +2,9 @@ import SwiftUI
 
 @main
 struct ClickrApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = RemoteViewModel()
+    @AppStorage(AppSettings.hideIconWithoutAppleTV) private var hideIconWithoutAppleTV = false
 
     init() {
         StatusItemMenu.install()
@@ -13,7 +15,7 @@ struct ClickrApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra {
+        MenuBarExtra(isInserted: iconIsShown) {
             RemotePopover(model: model)
         } label: {
             MenuBarLabel(model: model)
@@ -23,6 +25,22 @@ struct ClickrApp: App {
         Settings {
             SettingsView(model: model)
         }
+    }
+
+    private var iconIsShown: Binding<Bool> {
+        Binding(
+            get: { !(hideIconWithoutAppleTV && model.noAppleTVFound) },
+            set: { _ in }
+        )
+    }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Opening Clickr while it's already running shows Settings. That's the way back when
+    /// the menu bar icon is hidden.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        MainActor.assumeIsolated { StatusItemMenu.showSettings() }
+        return false
     }
 }
 

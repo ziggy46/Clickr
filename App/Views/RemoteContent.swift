@@ -5,6 +5,7 @@ import SwiftUI
 struct RemoteContent: View {
     let model: RemoteViewModel
     @Environment(\.remoteTheme) private var theme
+    @AppStorage(AppSettings.showKeyboardHint) private var showKeyboardHint = true
 
     var body: some View {
         VStack(spacing: theme.spacing) {
@@ -18,7 +19,9 @@ struct RemoteContent: View {
             }
             .disabled(!hasDevice)
             .opacity(hasDevice ? 1 : 0.4)
-            FooterHint()
+            if showKeyboardHint {
+                FooterHint()
+            }
         }
     }
 

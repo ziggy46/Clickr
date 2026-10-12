@@ -20,6 +20,19 @@ final class RemoteViewModel {
     /// True while the "Type on the TV" field has focus, so remote shortcuts stand aside.
     var isTyping = false
 
+    /// Whether the selected TV says it's asleep.
+    private(set) var isAsleep = false
+
+    /// The "Type on the TV" text. Follows the TV: emptied when its keyboard goes away,
+    /// filled with what's already there when a text field gains focus.
+    var tvText = ""
+    /// The text the TV is known to have, so updates that came from the TV aren't sent back.
+    private var syncedText = ""
+
+    /// True once no Apple TV has been on the network for a few seconds (for hiding the icon).
+    private(set) var noAppleTVFound = false
+    private var noAppleTVTimer: Task<Void, Never>?
+
     /// TVs with saved pairing keys (for Settings).
     private(set) var pairedDeviceIDs: [String] = []
 
@@ -38,6 +51,7 @@ final class RemoteViewModel {
     private var sessions: [DiscoveredDevice.ID: AppleTVSession] = [:]
     private var observedDeviceID: DiscoveredDevice.ID?
     private var stateTask: Task<Void, Never>?
+    private var updatesTask: Task<Void, Never>?
     private var pairingStart: Task<Void, Error>?
     private var isPreview = false
     private let log = Logger(subsystem: "com.ziggy46.clickr", category: "Remote")
@@ -72,6 +86,7 @@ final class RemoteViewModel {
         for await devices in await browser.devices {
             self.devices = devices
             rememberNames(of: devices)
+            trackWhetherAnyTVIsAround()
             // Until the user chooses, follow the preferred TV, so a paired TV that shows up
             // a moment after an unpaired one still wins.
             if selectionIsAutomatic, let preferred = preferredDevice(in: devices) {
@@ -112,6 +127,9 @@ final class RemoteViewModel {
         guard selectedDevice?.id != observedDeviceID else { return }
         observedDeviceID = selectedDevice?.id
         stateTask?.cancel()
+        updatesTask?.cancel()
+        isAsleep = false
+        receivedFromTV("")
         guard let session = selectedSession else {
             connectionState = .disconnected
             return
@@ -119,6 +137,15 @@ final class RemoteViewModel {
         stateTask = Task { [weak self] in
             for await state in await session.state {
                 self?.connectionState = state
+            }
+        }
+        updatesTask = Task { [weak self] in
+            for await update in await session.updates {
+                switch update {
+                case .asleep(let asleep): self?.isAsleep = asleep
+                case .keyboardShown(let text): self?.receivedFromTV(text)
+                case .keyboardHidden: self?.receivedFromTV("")
+                }
             }
         }
         // Paired TVs connect right away; an unpaired one waits for the pairing view.
@@ -187,9 +214,30 @@ final class RemoteViewModel {
         }
     }
 
+    private func receivedFromTV(_ text: String) {
+        syncedText = text
+        tvText = text
+    }
+
+    /// After a few seconds with no Apple TV on the network, report none found. A TV showing
+    /// up again counts right away.
+    private func trackWhetherAnyTVIsAround() {
+        noAppleTVTimer?.cancel()
+        if !devices.isEmpty {
+            noAppleTVFound = false
+            return
+        }
+        noAppleTVTimer = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
+            self?.noAppleTVFound = true
+        }
+    }
+
     /// Makes the TV's focused text field match `text`.
     func typeOnTV(_ text: String) {
-        guard let session = selectedSession else { return }
+        guard text != syncedText, let session = selectedSession else { return }
+        syncedText = text
         Task {
             do {
                 try await session.sendText(text)

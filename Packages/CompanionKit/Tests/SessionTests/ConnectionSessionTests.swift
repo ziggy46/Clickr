@@ -44,7 +44,8 @@ private func pairedSession() async throws -> (FakeAppleTV, AppleTVSession) {
 
         await session.connect()
         #expect(await waitFor(.connected, in: session))
-        #expect(tv.snapshot().requests == ["_systemInfo", "_sessionStart", "TVRCSessionStart"])
+        #expect(tv.snapshot().requests == ["_systemInfo", "_sessionStart", "TVRCSessionStart", "FetchAttentionState", "_tiStart"])
+        #expect(tv.events == ["SystemStatus", "TVSystemStatus"])
         await session.disconnect()
     }
 
@@ -95,6 +96,21 @@ private func pairedSession() async throws -> (FakeAppleTV, AppleTVSession) {
 
         await session.connect()
         #expect(await waitFor(.needsPairing, in: session))
+    }
+
+    @Test func reportsSleepAndWake() async throws {
+        let (tv, session) = try await pairedSession()
+        defer { tv.stop() }
+        tv.isAsleep = true
+        var updates = await session.updates.makeAsyncIterator()
+
+        await session.connect()
+        #expect(await updates.next() == .asleep(true))
+        // Then the connect-time _tiStart reports the focused field.
+        #expect(await updates.next() == .keyboardShown(text: ""))
+        tv.setAsleep(false)
+        #expect(await updates.next() == .asleep(false))
+        await session.disconnect()
     }
 
     @Test func pressWithoutConnectionThrows() async {

@@ -40,7 +40,7 @@ struct DeviceHeader: View {
             switch model.connectionState {
             case .connected:
                 dot(.statusConnected)
-                statusText("Connected · \(device.modelName)")
+                statusText("Connected · \(model.isAsleep ? "Asleep" : device.modelName)")
             case .connecting:
                 dot(.statusConnecting)
                 statusText("Connecting…")

@@ -18,6 +18,15 @@ enum StatusItemMenu {
         }
     }
 
+    static func showSettings() {
+        NSApp.activate()
+        if let openSettings {
+            openSettings()
+        } else {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
+    }
+
     /// Opens or closes the remote, as if the icon were clicked (used by the global shortcut).
     static func togglePopover() {
         guard let button = statusButton() else { return }
@@ -71,12 +80,7 @@ enum StatusItemMenu {
         static let shared = MenuActions()
 
         @objc func openSettings() {
-            NSApp.activate()
-            if let open = StatusItemMenu.openSettings {
-                open()
-            } else {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            }
+            StatusItemMenu.showSettings()
         }
     }
 }

@@ -85,9 +85,8 @@ struct VolumePill: View {
 
 /// "Type on the TV": whatever is typed here goes into the focused text field on the TV.
 struct TypeOnTVField: View {
-    let model: RemoteViewModel
+    @Bindable var model: RemoteViewModel
     @Environment(\.remoteTheme) private var theme
-    @State private var text = ""
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -97,7 +96,7 @@ struct TypeOnTVField: View {
                 .foregroundStyle(theme.secondaryText)
 
             let shape = RoundedRectangle(cornerRadius: theme.isGlass ? 19 : 10, style: .continuous)
-            TextField("", text: $text)
+            TextField("", text: $model.tvText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
                 .foregroundStyle(theme.primaryText)
@@ -107,7 +106,7 @@ struct TypeOnTVField: View {
                 .overlay(shape.stroke(theme.border(theme.isGlass ? 0.22 : 0.14), lineWidth: 1))
                 .focused($isFocused)
                 .disabled(model.connectionState != .connected)
-                .onChange(of: text) { _, newText in model.typeOnTV(newText) }
+                .onChange(of: model.tvText) { _, newText in model.typeOnTV(newText) }
                 .onChange(of: isFocused) { _, focused in model.isTyping = focused }
                 .onKeyPress(.escape) {
                     // Leave the field and hand the keyboard back to the remote.

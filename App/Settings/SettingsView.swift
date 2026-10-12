@@ -6,6 +6,8 @@ struct SettingsView: View {
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var launchError: String?
     @State private var deviceToForget: String?
+    @AppStorage(AppSettings.showKeyboardHint) private var showKeyboardHint = true
+    @AppStorage(AppSettings.hideIconWithoutAppleTV) private var hideIconWithoutAppleTV = false
 
     var body: some View {
         Form {
@@ -16,6 +18,15 @@ struct SettingsView: View {
                     Text(launchError).font(.caption).foregroundStyle(.secondary)
                 } else if LaunchAtLogin.needsApproval {
                     Text("Allow Clickr in System Settings > General > Login Items.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Remote") {
+                Toggle("Show the keyboard hint", isOn: $showKeyboardHint)
+                Toggle("Hide the menu bar icon when no Apple TV is found", isOn: $hideIconWithoutAppleTV)
+                if hideIconWithoutAppleTV {
+                    Text("While it's hidden, open Clickr again from Applications to get back to Settings.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }

@@ -19,6 +19,10 @@ final class FakeAppleTV: @unchecked Sendable {
     var rejectsVerify = false
     /// Whether a text field has focus (a search screen is open).
     var hasTextField = true
+    /// What FetchAttentionState reports.
+    var isAsleep = false
+    /// Events the client registered for with `_interest`.
+    private(set) var registeredEvents: [String] = []
     /// What's in the TV's focused text field.
     private(set) var fieldText = ""
     /// `_tiC` operations received, as "insert:<text>" or "clear".
@@ -63,8 +67,33 @@ final class FakeAppleTV: @unchecked Sendable {
         }
     }
 
-    func setFieldText(_ text: String) {
-        queue.sync { fieldText = text }
+    /// A text field gains focus with `text` in it; pushes `_tiStarted`.
+    func showKeyboard(text: String) {
+        queue.sync {
+            hasTextField = true
+            fieldText = text
+            connections.last?.sendEvent("_tiStarted", ["_tiD": .data(textSessionArchive())])
+        }
+    }
+
+    /// The text field loses focus; pushes `_tiStopped`.
+    func hideKeyboard() {
+        queue.sync {
+            hasTextField = false
+            connections.last?.sendEvent("_tiStopped", [:])
+        }
+    }
+
+    /// Pushes a TVSystemStatus event (1 asleep, 3 awake).
+    func setAsleep(_ asleep: Bool) {
+        queue.sync {
+            isAsleep = asleep
+            connections.last?.sendEvent("TVSystemStatus", ["state": .int(asleep ? 1 : 3)])
+        }
+    }
+
+    var events: [String] {
+        queue.sync { registeredEvents }
     }
 
     /// A `_tiStart` reply archive, shaped like the paths pyatv reads.
@@ -177,6 +206,10 @@ final class FakeAppleTV: @unchecked Sendable {
             connection.send(content: header.bytes + payload, completion: .idempotent)
         }
 
+        fileprivate func sendEvent(_ identifier: String, _ content: OPACKValue) {
+            send(type: .eOPACK, ["_i": .string(identifier), "_t": 1, "_c": content], encrypted: true)
+        }
+
         private func reply(_ type: FrameType, _ items: [TLV8.Item]) {
             send(type: type, ["_pd": .data(TLV8(items).encoded())], encrypted: false)
         }
@@ -278,6 +311,9 @@ final class FakeAppleTV: @unchecked Sendable {
                 if identifier == "_tiC", let archive = message["_c"]?["_tiD"]?.dataValue {
                     tv.applyTextOperation(archive)
                 }
+                if identifier == "_interest", case .array(let names)? = message["_c"]?["_regEvents"] {
+                    tv.registeredEvents += names.compactMap(\.stringValue)
+                }
                 return
             }
             tv.requests.append(identifier)
@@ -287,6 +323,8 @@ final class FakeAppleTV: @unchecked Sendable {
                 content = ["_sid": 0x1234]
             case "_tiStart" where tv.hasTextField:
                 content = ["_tiD": .data(tv.textSessionArchive())]
+            case "FetchAttentionState":
+                content = ["state": .int(tv.isAsleep ? 1 : 3)]
             case "_hidC":
                 tv.hidCommands.append((message["_c"]?["_hBtS"]?.intValue ?? 0, message["_c"]?["_hidC"]?.intValue ?? 0))
             default:

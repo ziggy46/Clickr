@@ -202,7 +202,8 @@ pyatv's long-press Select holds down for 1 s, matching the plan.
 
 - **Keep-alive** and reconnect: back off at 1 s, 2 s, 5 s, then 10 s max.
 - **Text input** (`_tiStart` and RTI payloads) is **Milestone 9, stretch.** Its payload uses NSKeyedArchiver; study pyatv before starting.
-  - *Implemented (Milestone 9), following pyatv:* each update sends `_tiStop` then `_tiStart`; the reply's `_tiD` is a keyed archive with `sessionUUID` (raw 16 bytes) and the field's text at `documentState.docSt.contextBeforeInput`. No `_tiD` means no text field has focus. Text goes in a `_tiC` **event** (`_t` 1, no reply) with `{"_tiV": 1, "_tiD": <RTITextOperations archive>}`: `keyboardOutput.insertionText` to type, or an empty `textToAssert` with an empty keyboard output to clear. If the new text extends what's on the TV only the rest is typed; otherwise it clears and retypes. Rapid typing is coalesced to the latest text.
+  - *Revised 2026-10-12:* `_tiStart` is sent once at connect. After that the TV pushes `_tiStarted` (with `_tiD`) when a text field gains focus and `_tiStopped` when it loses focus, so typing uses that session and the text we know is there, with no per-keystroke round trip. The "Type on the TV" box empties when the TV's keyboard goes away and shows what's already in the field when one gains focus.
+  - *First version (Milestone 9), following pyatv:* each update sent `_tiStop` then `_tiStart`; the reply's `_tiD` is a keyed archive with `sessionUUID` (raw 16 bytes) and the field's text at `documentState.docSt.contextBeforeInput`. No `_tiD` means no text field has focus. Text goes in a `_tiC` **event** (`_t` 1, no reply) with `{"_tiV": 1, "_tiD": <RTITextOperations archive>}`: `keyboardOutput.insertionText` to type, or an empty `textToAssert` with an empty keyboard output to clear. If the new text extends what's on the TV only the rest is typed; otherwise it clears and retypes. Rapid typing is coalesced to the latest text.
   - The archives are written and read with a small binary plist codec of our own (Foundation can read the UID type but can't create or inspect it), with the same object layout as pyatv's pre-encoded payloads.
 - **Now playing:** Companion alone probably doesn't carry full metadata (pyatv gets it from MRP over AirPlay). **Milestone 10, stretch.** Until then the Now Playing card is **hidden**, not shown with placeholder text.
 
@@ -402,6 +403,7 @@ Shown in place of the remote when the state is `.needsPairing`, inside the same 
 | No Apple TV found | Header shows "No Apple TV found". Body: "Make sure your Mac and Apple TV are on the same network." Remote controls disabled at 40% opacity. |
 | Connecting | Status dot is gray `#8E8E93`, with the text "Connecting…" |
 | Disconnected | Status dot is `#FF453A`, with the text "Not connected · Retry"; Retry is a link-style button |
+| Connected, TV asleep | *(Added 2026-10-12 at the owner's request.)* Green dot, "Connected · Asleep". A sleeping Apple TV stays on the network, so the connection is real and a button press wakes it. Power state comes from `FetchAttentionState` at connect (1 asleep, 2 screensaver, 3 awake, 4 idle) and `SystemStatus` / `TVSystemStatus` events registered with `_interest`, as in pyatv. |
 
 ### 5.6 Keyboard shortcuts
 
@@ -433,6 +435,8 @@ Not part of the original design. A standard macOS Settings window (SwiftUI `Sett
 - **Launch at login:** toggle using `SMAppService.mainApp`. If macOS needs approval, a note points to System Settings > General > Login Items.
 - **Default Apple TV:** "Last used" (the default) or a specific TV. Applied at launch.
 - **Paired Apple TVs:** every TV with a pairing key, each with **Forget…** behind a confirmation. Forgetting removes the Keychain item only; the TV keeps its "Clickr" entry until it's removed under Remotes and Devices on the TV, which the confirmation says.
+- **Show the keyboard hint:** shows or hides the footer hint (5.2 item 7). On by default.
+- **Hide the menu bar icon when no Apple TV is found:** off by default. Uses `MenuBarExtra(isInserted:)`; the icon goes away after 5 s with no Apple TV on the network and comes back as soon as one appears. Opening Clickr again while it runs shows Settings, which is the way back while the icon is hidden.
 - **Global shortcut:** record a key combination (needs ⌘, ⌥ or ⌃; Esc cancels) that opens or closes the remote from anywhere. Registered with the Carbon hot key API, which works in the sandbox without accessibility permission. Off until set.
 
 ---
