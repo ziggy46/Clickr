@@ -199,6 +199,9 @@ Clickr is running from the disk image or straight from Downloads, where macOS do
 **How do I remove Clickr completely?**
 In Clickr's Settings, **Forget** each Apple TV, then quit Clickr and drag it to the Trash. On each Apple TV, remove Clickr under **Settings > Remotes and Devices**.
 
+**Still stuck, or have an idea?**
+[Open an issue](https://github.com/ziggy46/Clickr/issues/new/choose). The bug report form asks for the details that help most, and explains how to grab Clickr's logs.
+
 ## Privacy
 
 Clickr talks to your Apple TV directly over your local network. It has no accounts, no analytics and no crash reporting.
