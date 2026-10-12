@@ -14,7 +14,7 @@ struct RemoteContent: View {
                 Clickpad(model: model)
                 ButtonRow(model: model)
                 VolumePill(model: model)
-                TypeOnTVField()
+                TypeOnTVField(model: model)
             }
             .disabled(!hasDevice)
             .opacity(hasDevice ? 1 : 0.4)

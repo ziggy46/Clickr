@@ -5,6 +5,7 @@ import OPACK
 import TLV8
 import TestSupport
 import Transport
+@testable import Session
 
 /// A pretend Apple TV on 127.0.0.1. It plays the TV's side of pair-setup and pair-verify,
 /// then answers encrypted Companion requests, so the whole session can be tested without
@@ -16,6 +17,13 @@ final class FakeAppleTV: @unchecked Sendable {
 
     /// Set to make pair-verify fail the way a TV that forgot us does (error in M4).
     var rejectsVerify = false
+    /// Whether a text field has focus (a search screen is open).
+    var hasTextField = true
+    /// What's in the TV's focused text field.
+    private(set) var fieldText = ""
+    /// `_tiC` operations received, as "insert:<text>" or "clear".
+    private(set) var textOperations: [String] = []
+    let textSessionID = Data((0..<16).map { UInt8($0) })
     /// The controller name the client sent in M5, once it has.
     private(set) var pairedName: String?
     /// Every E_OPACK request identifier, in order.
@@ -44,11 +52,48 @@ final class FakeAppleTV: @unchecked Sendable {
         let requests: [String]
         let hid: [(state: UInt64, code: UInt64)]
         let name: String?
+        let fieldText: String
+        let textOperations: [String]
     }
 
     /// What the TV has recorded so far, read on its queue.
     func snapshot() -> Snapshot {
-        queue.sync { Snapshot(requests: requests, hid: hidCommands, name: pairedName) }
+        queue.sync {
+            Snapshot(requests: requests, hid: hidCommands, name: pairedName, fieldText: fieldText, textOperations: textOperations)
+        }
+    }
+
+    func setFieldText(_ text: String) {
+        queue.sync { fieldText = text }
+    }
+
+    /// A `_tiStart` reply archive, shaped like the paths pyatv reads.
+    fileprivate func textSessionArchive() -> Data {
+        BinaryPlist.encode(.dict([
+            "$version": .int(100_000),
+            "$archiver": .string("RTIKeyedArchiver"),
+            "$top": .dict(["sessionUUID": .uid(1), "documentState": .uid(2)]),
+            "$objects": .array([
+                .string("$null"),
+                .data(textSessionID),
+                .dict(["docSt": .uid(3)]),
+                .dict(["contextBeforeInput": .uid(4)]),
+                .string(fieldText),
+            ]),
+        ]))
+    }
+
+    fileprivate func applyTextOperation(_ archive: Data) {
+        guard let plist = try? BinaryPlist.decode(archive),
+              TextInputArchive.resolve(plist, path: ["textOperations", "targetSessionUUID", "NS.uuidbytes"]) == .data(textSessionID)
+        else { return }
+        if case .string(let text)? = TextInputArchive.resolve(plist, path: ["textOperations", "keyboardOutput", "insertionText"]) {
+            fieldText += text
+            textOperations.append("insert:\(text)")
+        } else if TextInputArchive.resolve(plist, path: ["textOperations", "textToAssert"]) == .string("") {
+            fieldText = ""
+            textOperations.append("clear")
+        }
     }
 
     func start() async throws {
@@ -228,11 +273,20 @@ final class FakeAppleTV: @unchecked Sendable {
 
         private func handleRequest(_ message: OPACKValue) {
             guard let identifier = message["_i"]?.stringValue, let xid = message["_x"] else { return }
+            if message["_t"] == 1 {
+                // Events get no reply.
+                if identifier == "_tiC", let archive = message["_c"]?["_tiD"]?.dataValue {
+                    tv.applyTextOperation(archive)
+                }
+                return
+            }
             tv.requests.append(identifier)
             var content: OPACKValue = [:]
             switch identifier {
             case "_sessionStart":
                 content = ["_sid": 0x1234]
+            case "_tiStart" where tv.hasTextField:
+                content = ["_tiD": .data(tv.textSessionArchive())]
             case "_hidC":
                 tv.hidCommands.append((message["_c"]?["_hBtS"]?.intValue ?? 0, message["_c"]?["_hidC"]?.intValue ?? 0))
             default:

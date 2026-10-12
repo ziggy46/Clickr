@@ -83,10 +83,12 @@ struct VolumePill: View {
     }
 }
 
-/// "Type on the TV". Shown but disabled until text input lands (Milestone 9).
+/// "Type on the TV": whatever is typed here goes into the focused text field on the TV.
 struct TypeOnTVField: View {
+    let model: RemoteViewModel
     @Environment(\.remoteTheme) private var theme
     @State private var text = ""
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -103,7 +105,16 @@ struct TypeOnTVField: View {
                 .frame(height: theme.isGlass ? 38 : 36)
                 .background(theme.isGlass ? Color.black.opacity(0.24) : Color(hex: 0x1F1F23), in: shape)
                 .overlay(shape.stroke(theme.border(theme.isGlass ? 0.22 : 0.14), lineWidth: 1))
-                .disabled(true)
+                .focused($isFocused)
+                .disabled(model.connectionState != .connected)
+                .onChange(of: text) { _, newText in model.typeOnTV(newText) }
+                .onChange(of: isFocused) { _, focused in model.isTyping = focused }
+                .onKeyPress(.escape) {
+                    // Leave the field and hand the keyboard back to the remote.
+                    isFocused = false
+                    return .handled
+                }
+                .accessibilityLabel("Type on the TV")
         }
     }
 }

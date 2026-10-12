@@ -598,6 +598,50 @@ def verify_vectors():
     }
 
 
+# Text input (RTI keyed archives) --------------------------------------------------
+
+
+def text_input_vectors():
+    """pyatv's pre-encoded RTI payloads, plus a made-up `_tiStart` reply archive shaped
+    like the paths pyatv reads from it (sessionUUID, documentState.docSt.contextBeforeInput).
+    """
+    import plistlib
+
+    from pyatv.protocols.companion import keyed_archiver
+    from pyatv.protocols.companion.plist_payloads.rti_text_operations import (
+        get_rti_clear_text_payload,
+        get_rti_input_text_payload,
+    )
+
+    session = uuid.UUID("0F8E7D6C-5B4A-4938-8271-605F4E3D2C1B").bytes
+    reply = plistlib.dumps({
+        "$version": 100000,
+        "$archiver": "RTIKeyedArchiver",
+        "$top": {"sessionUUID": plistlib.UID(1), "documentState": plistlib.UID(2)},
+        "$objects": [
+            "$null",
+            session,
+            {"docSt": plistlib.UID(3), "$class": plistlib.UID(6)},
+            {"contextBeforeInput": plistlib.UID(4), "$class": plistlib.UID(5)},
+            "Star W",
+            {"$classname": "TIDocumentState", "$classes": ["TIDocumentState", "NSObject"]},
+            {"$classname": "RTIDocumentState", "$classes": ["RTIDocumentState", "NSObject"]},
+        ],
+    }, fmt=plistlib.PlistFormat.FMT_BINARY, sort_keys=False)
+    read_uuid, read_text = keyed_archiver.read_archive_properties(
+        reply, ["sessionUUID"], ["documentState", "docSt", "contextBeforeInput"])
+    assert read_uuid == session and read_text == "Star W"
+
+    return {
+        "session_uuid": session.hex(),
+        "insert_text": "Café ’s",
+        "insert_payload": get_rti_input_text_payload(session, "Café ’s").hex(),
+        "clear_payload": get_rti_clear_text_payload(session).hex(),
+        "start_reply": reply.hex(),
+        "start_reply_text": "Star W",
+    }
+
+
 def write(path: Path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n")
@@ -615,3 +659,4 @@ if __name__ == "__main__":
     frames.update(output_key=verify["output_key"], input_key=verify["input_key"])
     write(TESTS / "PairingTests" / "Vectors" / "verify.json", verify)
     write(TESTS / "TransportTests" / "Vectors" / "frames.json", frames)
+    write(TESTS / "SessionTests" / "Vectors" / "text_input.json", text_input_vectors())

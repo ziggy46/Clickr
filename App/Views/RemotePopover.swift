@@ -24,8 +24,11 @@ struct RemotePopover: View {
                 .focusable()
                 .focused($focused)
                 .focusEffectDisabled()
-                .modifier(RemoteKeyboardShortcuts(model: model, isEnabled: model.selectedDevice != nil))
+                .modifier(RemoteKeyboardShortcuts(model: model, isEnabled: model.selectedDevice != nil && !model.isTyping))
                 .onAppear { focused = true }
+                .onChange(of: model.isTyping) { _, typing in
+                    if !typing { focused = true }
+                }
                 .windowBackgroundCleared(!theme.isGlass)
         }
     }

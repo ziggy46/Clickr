@@ -17,6 +17,9 @@ final class RemoteViewModel {
     /// Replaces the pairing view's instructions after a failed attempt.
     private(set) var pairingMessage: String?
 
+    /// True while the "Type on the TV" field has focus, so remote shortcuts stand aside.
+    var isTyping = false
+
     private let browser = DeviceBrowser()
     private let store: CredentialStore = KeychainCredentialStore()
     private var sessions: [DiscoveredDevice.ID: AppleTVSession] = [:]
@@ -121,6 +124,20 @@ final class RemoteViewModel {
                 try await session.press(button, hold: hold)
             } catch {
                 log.error("Press \(String(describing: button), privacy: .public) failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
+    /// Makes the TV's focused text field match `text`.
+    func typeOnTV(_ text: String) {
+        guard let session = selectedSession else { return }
+        Task {
+            do {
+                try await session.sendText(text)
+            } catch AppleTVSession.SessionError.noTextField {
+                log.info("No text field has focus on the TV")
+            } catch {
+                log.error("Typing failed: \(String(describing: error), privacy: .public)")
             }
         }
     }

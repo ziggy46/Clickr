@@ -22,6 +22,8 @@ public actor AppleTVSession {
         case connectionClosed
         /// The TV answered a request with an error (`_em`).
         case commandFailed(String)
+        /// No text field has focus on the TV.
+        case noTextField
     }
 
     public nonisolated let device: DiscoveredDevice
@@ -47,6 +49,8 @@ public actor AppleTVSession {
     private var wantsConnection = false
     private var connectLoop: Task<Void, Never>?
     private var lastPress: Task<Void, Error>?
+    private var desiredText: String?
+    private var textUpdate: Task<Void, Error>?
     private static let backoff: [Duration] = [.seconds(1), .seconds(2), .seconds(5), .seconds(10)]
 
     public init(device: DiscoveredDevice, store: CredentialStore) {
@@ -194,6 +198,59 @@ public actor AppleTVSession {
         _ = try await request("_hidC", ["_hBtS": 1, "_hidC": .int(UInt64(button.hidCode))])
         try await Task.sleep(for: hold ? .seconds(1) : .milliseconds(20))
         _ = try await request("_hidC", ["_hBtS": 2, "_hidC": .int(UInt64(button.hidCode))])
+    }
+
+    /// Makes the focused text field on the TV contain `text`. Rapid calls are coalesced:
+    /// only the latest text is applied once the previous update finishes.
+    public func sendText(_ text: String) async throws {
+        desiredText = text
+        if let textUpdate {
+            try await textUpdate.value
+            return
+        }
+        let update = Task { try await applyLatestText() }
+        textUpdate = update
+        try await update.value
+    }
+
+    private func applyLatestText() async throws {
+        defer { textUpdate = nil }
+        while let target = desiredText {
+            desiredText = nil
+            try await applyText(target)
+        }
+    }
+
+    /// Like pyatv: restart the text session to read the field's current text, then insert
+    /// what's missing, or clear and retype if the text changed some other way.
+    private func applyText(_ target: String) async throws {
+        guard currentState == .connected else { throw SessionError.notConnected }
+        _ = try? await request("_tiStop", [:])
+        let reply = try await request("_tiStart", [:])
+        guard let archive = reply["_c"]?["_tiD"]?.dataValue,
+              let session = try TextInputArchive.session(from: archive) else {
+            throw SessionError.noTextField
+        }
+
+        if target.hasPrefix(session.currentText) {
+            let missing = String(target.dropFirst(session.currentText.count))
+            if !missing.isEmpty {
+                try await sendEvent("_tiC", ["_tiV": 1, "_tiD": .data(TextInputArchive.insert(missing, session: session.id))])
+            }
+        } else {
+            try await sendEvent("_tiC", ["_tiV": 1, "_tiD": .data(TextInputArchive.clear(session: session.id))])
+            if !target.isEmpty {
+                try await sendEvent("_tiC", ["_tiV": 1, "_tiD": .data(TextInputArchive.insert(target, session: session.id))])
+            }
+        }
+    }
+
+    /// Sends an E_OPACK event (no reply expected).
+    private func sendEvent(_ identifier: String, _ content: OPACKValue) async throws {
+        guard let connection, isMessaging else { throw SessionError.notConnected }
+        let message: OPACKValue = ["_i": .string(identifier), "_t": 1, "_c": content, "_x": .int(transactionID)]
+        transactionID += 1
+        try await connection.send(Frame(type: .eOPACK, payload: OPACK.encode(message)))
     }
 
     /// Sends an E_OPACK request and waits for the matching response.

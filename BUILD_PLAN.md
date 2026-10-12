@@ -202,6 +202,8 @@ pyatv's long-press Select holds down for 1 s, matching the plan.
 
 - **Keep-alive** and reconnect: back off at 1 s, 2 s, 5 s, then 10 s max.
 - **Text input** (`_tiStart` and RTI payloads) is **Milestone 9, stretch.** Its payload uses NSKeyedArchiver; study pyatv before starting.
+  - *Implemented (Milestone 9), following pyatv:* each update sends `_tiStop` then `_tiStart`; the reply's `_tiD` is a keyed archive with `sessionUUID` (raw 16 bytes) and the field's text at `documentState.docSt.contextBeforeInput`. No `_tiD` means no text field has focus. Text goes in a `_tiC` **event** (`_t` 1, no reply) with `{"_tiV": 1, "_tiD": <RTITextOperations archive>}`: `keyboardOutput.insertionText` to type, or an empty `textToAssert` with an empty keyboard output to clear. If the new text extends what's on the TV only the rest is typed; otherwise it clears and retypes. Rapid typing is coalesced to the latest text.
+  - The archives are written and read with a small binary plist codec of our own (Foundation can read the UID type but can't create or inspect it), with the same object layout as pyatv's pre-encoded payloads.
 - **Now playing:** Companion alone probably doesn't carry full metadata (pyatv gets it from MRP over AirPlay). **Milestone 10, stretch.** Until then the Now Playing card is **hidden**, not shown with placeholder text.
 
 ### 3.9 Public API used by the app
