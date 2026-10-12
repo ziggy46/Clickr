@@ -76,6 +76,9 @@ final class RemoteViewModel {
     private var previousDeviceID: DiscoveredDevice.ID?
     private var isPreview = false
     private let log = Logger(subsystem: "com.ziggy46.clickr", category: "Remote")
+    /// Swipe touches, handed to the session in order by one consumer.
+    private let touches = AsyncStream<[TouchEvent]>.makeStream()
+    private var touchConsumer: Task<Void, Never>?
 
     /// The last version of the selected TV we saw, so a TV that briefly drops out of
     /// discovery doesn't make the selection jump to another one.
@@ -244,6 +247,33 @@ final class RemoteViewModel {
                 log.error("Press \(String(describing: button), privacy: .public) failed: \(String(describing: error), privacy: .public)")
             }
         }
+    }
+
+    /// A now playing control (play/pause, skip, next, previous or seek).
+    func perform(_ action: PlaybackAction) {
+        guard let session = selectedSession else { return }
+        Task {
+            do {
+                try await session.perform(action)
+            } catch {
+                log.error("Playback \(String(describing: action), privacy: .public) failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
+    /// Touches from a trackpad swipe on the clickpad. Separate Tasks per call could
+    /// overtake each other, so they go through one stream to keep their order.
+    func touch(_ events: [TouchEvent]) {
+        guard !events.isEmpty else { return }
+        if touchConsumer == nil {
+            let stream = touches.stream
+            touchConsumer = Task { [weak self] in
+                for await events in stream {
+                    await self?.selectedSession?.touch(events)
+                }
+            }
+        }
+        touches.continuation.yield(events)
     }
 
     /// Sleeps the TV, or wakes it if it says it's asleep. The change counts as done when the
