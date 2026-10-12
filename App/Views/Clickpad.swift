@@ -7,6 +7,7 @@ struct Clickpad: View {
     @Environment(\.remoteTheme) private var theme
     /// Whether the current drag already sent its direction.
     @State private var swipeSent = false
+    @AppStorage(AppSettings.trackpadSwipes) private var trackpadSwipes = true
 
     private var diameter: CGFloat { theme.isGlass ? 224 : 220 }
     private var arrowSize: CGFloat { theme.isGlass ? 46 : 44 }
@@ -30,6 +31,7 @@ struct Clickpad: View {
         .frame(width: diameter, height: diameter)
         .contentShape(Circle())
         .simultaneousGesture(swipe)
+        .modifier(TrackpadSwipes(model: model, isEnabled: trackpadSwipes))
     }
 
     private func arrow(_ button: RemoteButton, symbol: String, label: String) -> some View {

@@ -72,7 +72,14 @@ struct PreviewOverrides {
             nowPlaying: defaults.bool(forKey: "ClickrPreviewNowPlaying") ? NowPlaying(
                 state: .playing, title: "Episode 3: The Long Way Home", artist: "Northern Lights", appName: "TV",
                 duration: 2700, elapsed: 1000, elapsedTimestamp: Date(), playbackRate: 1,
-                artworkAvailable: false, itemID: "preview", location: 0
+                artworkAvailable: false, itemID: "preview", location: 0,
+                // What a typical video app offers.
+                commands: [
+                    .togglePlayPause: CommandInfo(enabled: true),
+                    .skipBackward: CommandInfo(enabled: true, preferredIntervals: [10]),
+                    .skipForward: CommandInfo(enabled: true, preferredIntervals: [10]),
+                    .seekToPlaybackPosition: CommandInfo(enabled: true),
+                ]
             ) : nil
         )
     }()

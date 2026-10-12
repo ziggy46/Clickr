@@ -6,12 +6,14 @@ struct RemoteContent: View {
     let model: RemoteViewModel
     @Environment(\.remoteTheme) private var theme
     @AppStorage(AppSettings.showKeyboardHint) private var showKeyboardHint = true
+    @AppStorage(AppSettings.playbackControls) private var playbackControls = true
 
     var body: some View {
         VStack(spacing: theme.spacing) {
             DeviceHeader(model: model)
             if let nowPlaying = model.nowPlaying {
-                NowPlayingCard(nowPlaying: nowPlaying, artwork: model.artwork)
+                NowPlayingCard(nowPlaying: nowPlaying, artwork: model.artwork,
+                               perform: playbackControls ? { model.perform($0) } : nil)
             }
             Group {
                 Clickpad(model: model)
