@@ -27,10 +27,6 @@ actor HAPChannel {
         tcp.enableKeepalive = true
         tcp.keepaliveIdle = 15
         let parameters = NWParameters(tls: nil, tcp: tcp)
-        // IPv4 keeps the addresses simple for the RTSP URI and the extra channels.
-        if let ip = parameters.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options {
-            ip.version = .v4
-        }
         parameters.includePeerToPeer = false
         connection = NWConnection(to: endpoint, using: parameters)
         (received, continuation) = AsyncThrowingStream.makeStream(of: Data.self, throwing: Error.self)

@@ -104,7 +104,7 @@ public actor AirPlayRemoteControl {
         guard let remote = await control.remoteHost, let local = await control.localHost else {
             throw AirPlayError.noAddress
         }
-        rtspURI = "rtsp://\(Self.address(local))/\(sessionID)"
+        rtspURI = "rtsp://\(Self.uriHost(local))/\(sessionID)"
         log.info("AirPlay control connected to \(Self.address(remote), privacy: .public)")
 
         // Pair-verify with the pairing from Companion, as raw TLV8 over HTTP.
@@ -378,6 +378,12 @@ public actor AirPlayRemoteControl {
 
     private static func plist(_ response: HTTPMessage) throws -> PlistValue {
         try BinaryPlist.decode(response.body)
+    }
+
+    /// IPv6 goes in brackets, without the interface suffix.
+    private static func uriHost(_ host: NWEndpoint.Host) -> String {
+        guard case .ipv6 = host else { return address(host) }
+        return "[\(address(host).split(separator: "%").first ?? "")]"
     }
 
     private static func address(_ host: NWEndpoint.Host) -> String {

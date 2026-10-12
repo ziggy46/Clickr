@@ -103,6 +103,11 @@ public actor CompanionConnection {
         connection.cancel()
     }
 
+    /// The TV's address once connected (the Bonjour name resolved to an IP and port).
+    public var remoteEndpoint: NWEndpoint? {
+        connection.currentPath?.remoteEndpoint
+    }
+
     // MARK: - Connection events
 
     private func stateChanged(_ state: NWConnection.State) {

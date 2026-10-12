@@ -203,7 +203,9 @@ public actor AppleTVSession {
         }
         log.info("Connected to \(self.device.name, privacy: .public)")
         setState(.connected)
-        startNowPlaying(credentials: credentials)
+        if case .hostPort(let host, _)? = await connection?.remoteEndpoint {
+            startNowPlaying(credentials: credentials, host: host)
+        }
     }
 
     /// Asks for the power state and subscribes to changes, then starts the text input
@@ -417,10 +419,10 @@ public actor AppleTVSession {
 
     // MARK: - Now playing
 
-    private func startNowPlaying(credentials: PairingCredentials) {
+    private func startNowPlaying(credentials: PairingCredentials, host: NWEndpoint.Host) {
         guard nowPlayingEnabled else { return }
         airPlayTask?.cancel()
-        airPlayTask = Task { await runNowPlaying(credentials: credentials) }
+        airPlayTask = Task { await runNowPlaying(credentials: credentials, host: host) }
     }
 
     private func stopNowPlaying() {
@@ -437,11 +439,13 @@ public actor AppleTVSession {
     }
 
     /// Keeps an AirPlay tunnel open while connected, retrying with a growing delay.
-    private func runNowPlaying(credentials: PairingCredentials) async {
+    private func runNowPlaying(credentials: PairingCredentials, host: NWEndpoint.Host) async {
         let delays: [Duration] = [.seconds(5), .seconds(15), .seconds(60)]
         var attempt = 0
-        // AirPlay is advertised under the same name as Companion.
-        let endpoint = NWEndpoint.service(name: device.name, type: "_airplay._tcp", domain: "local.", interface: nil)
+        // Same address as the Companion connection; Apple TVs serve AirPlay on port 7000.
+        // (Looking AirPlay up by its Bonjour name fails with NoAuth inside the sandbox.)
+        let endpoint = NWEndpoint.hostPort(host: host, port: 7000)
+        log.info("Now playing: AirPlay at \(String(describing: endpoint), privacy: .public)")
         while !Task.isCancelled, currentState == .connected {
             let session = AirPlayRemoteControl(endpoint: endpoint, credentials: credentials, identity: Self.airPlayIdentity(for: credentials))
             airPlay = session
