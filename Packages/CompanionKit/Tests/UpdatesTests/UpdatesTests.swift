@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Testing
 @testable import Updates
@@ -50,5 +51,81 @@ import Testing
 
     @Test func asksTheRightURL() {
         #expect(checker.latestReleaseURL.absoluteString == "https://api.github.com/repos/ziggy46/Clickr/releases/latest")
+    }
+}
+
+@Suite struct ReleaseAssetTests {
+    private func release(_ names: [String]) -> Release {
+        let base = "https://github.com/ziggy46/Clickr/releases/download/v0.2.0/"
+        return Release(
+            version: AppVersion("0.2.0")!,
+            name: nil,
+            pageURL: URL(string: "https://github.com/ziggy46/Clickr/releases/tag/v0.2.0")!,
+            assets: Dictionary(uniqueKeysWithValues: names.map { ($0, URL(string: base + $0)!) })
+        )
+    }
+
+    @Test func readsAssetsFromGitHub() throws {
+        let checker = ReleaseChecker(repository: "ziggy46/Clickr", currentVersion: AppVersion("0.1.0")!)
+        let json = Data("""
+        {"tag_name": "v0.2.0", "name": "Clickr 0.2.0", "html_url": "https://github.com/ziggy46/Clickr/releases/tag/v0.2.0",
+         "assets": [{"name": "SIGNATURES.txt", "browser_download_url": "https://example.com/SIGNATURES.txt"}]}
+        """.utf8)
+        guard case .available(let release) = try checker.evaluate(json) else {
+            Issue.record("expected an update")
+            return
+        }
+        #expect(release.signaturesURL?.absoluteString == "https://example.com/SIGNATURES.txt")
+    }
+
+    @Test func picksTheDiskImageForTheMac() {
+        let both = release(["Clickr-0.2.0-arm64.dmg", "Clickr-0.2.0-universal.dmg", "SIGNATURES.txt"])
+        #expect(both.diskImage(forArm64: true)?.name == "Clickr-0.2.0-arm64.dmg")
+        #expect(both.diskImage(forArm64: false)?.name == "Clickr-0.2.0-universal.dmg")
+
+        let universalOnly = release(["Clickr-0.2.0-universal.dmg"])
+        #expect(universalOnly.diskImage(forArm64: true)?.name == "Clickr-0.2.0-universal.dmg")
+
+        // Older releases shipped zips, which can't be installed automatically.
+        let zips = release(["Clickr-0.2.0-arm64.zip", "Clickr-0.2.0-universal.zip"])
+        #expect(zips.diskImage(forArm64: true) == nil)
+        #expect(zips.signaturesURL == nil)
+    }
+}
+
+@Suite struct UpdateSignatureTests {
+    let key = Curve25519.Signing.PrivateKey()
+    var publicKey: String { key.publicKey.rawRepresentation.base64EncodedString() }
+
+    @Test func acceptsAGoodSignature() throws {
+        let image = Data("disk image".utf8)
+        let signature = try key.signature(for: image)
+        let file = "\(signature.base64EncodedString())  Clickr-0.2.0-arm64.dmg\n"
+        let parsed = UpdateSignatures.parse(file)
+        let found = try #require(parsed["Clickr-0.2.0-arm64.dmg"])
+        #expect(UpdateSignatures.isValid(found, of: image, publicKey: publicKey))
+    }
+
+    @Test func rejectsTamperingAndOtherKeys() throws {
+        let image = Data("disk image".utf8)
+        let signature = try key.signature(for: image)
+        #expect(!UpdateSignatures.isValid(signature, of: Data("disk imagf".utf8), publicKey: publicKey))
+
+        let otherKey = Curve25519.Signing.PrivateKey().publicKey.rawRepresentation.base64EncodedString()
+        #expect(!UpdateSignatures.isValid(signature, of: image, publicKey: otherKey))
+        #expect(!UpdateSignatures.isValid(signature, of: image, publicKey: "not a key"))
+    }
+
+    @Test func skipsMalformedLines() {
+        let good = Data(repeating: 1, count: 64).base64EncodedString()
+        let short = Data(repeating: 1, count: 10).base64EncodedString()
+        let parsed = UpdateSignatures.parse("""
+        \(good)  a.dmg
+        \(short)  b.dmg
+        nonsense
+        !!!!  c.dmg
+
+        """)
+        #expect(Array(parsed.keys) == ["a.dmg"])
     }
 }

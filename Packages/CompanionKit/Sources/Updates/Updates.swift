@@ -38,6 +38,29 @@ public struct Release: Sendable, Equatable {
     public let name: String?
     /// The release page, where the download is.
     public let pageURL: URL
+    /// Downloads attached to the release, by file name.
+    public let assets: [String: URL]
+
+    public init(version: AppVersion, name: String?, pageURL: URL, assets: [String: URL] = [:]) {
+        self.version = version
+        self.name = name
+        self.pageURL = pageURL
+        self.assets = assets
+    }
+
+    /// The disk image to install on this Mac: the Apple silicon build on Apple silicon if
+    /// there is one, otherwise the universal build.
+    public func diskImage(forArm64 isArm64: Bool) -> (name: String, url: URL)? {
+        let variants = isArm64 ? ["arm64", "universal"] : ["universal"]
+        for variant in variants {
+            let name = "Clickr-\(version.description)-\(variant).dmg"
+            if let url = assets[name] { return (name, url) }
+        }
+        return nil
+    }
+
+    /// The file listing an Ed25519 signature for each disk image.
+    public var signaturesURL: URL? { assets[UpdateSignatures.fileName] }
 
     public static func == (lhs: Release, rhs: Release) -> Bool {
         lhs.version == rhs.version && lhs.pageURL == rhs.pageURL
@@ -91,10 +114,16 @@ public struct ReleaseChecker: Sendable {
             let tag_name: String
             let name: String?
             let html_url: URL
+            let assets: [Asset]?
+        }
+        struct Asset: Decodable {
+            let name: String
+            let browser_download_url: URL
         }
         let payload = try JSONDecoder().decode(Payload.self, from: data)
         guard let version = AppVersion(payload.tag_name) else { throw CheckError.badResponse }
         guard currentVersion < version else { return .upToDate }
-        return .available(Release(version: version, name: payload.name, pageURL: payload.html_url))
+        let assets = Dictionary((payload.assets ?? []).map { ($0.name, $0.browser_download_url) }) { first, _ in first }
+        return .available(Release(version: version, name: payload.name, pageURL: payload.html_url, assets: assets))
     }
 }
