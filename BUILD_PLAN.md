@@ -243,6 +243,8 @@ A custom template image of a Siri Remote, shipped as a vector asset (PDF or SVG)
 
 Don't substitute the SF Symbol `appletvremote.gen4`. Use the custom icon above.
 
+**Quit menu** (added at the owner's request): right-click or Control-click the icon to get a menu with "Quit Clickr" (⌘Q). A left click still opens the popover.
+
 **States**, driven by `ConnectionState`:
 
 | State | Appearance |
