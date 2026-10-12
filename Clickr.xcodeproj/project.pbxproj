@@ -17,6 +17,7 @@
 		4E24788F6B9CBABEC7887090 /* PreviewSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2995E5D98A242BF5CFCE0ABC /* PreviewSupport.swift */; };
 		5696CABE5A0846698A989519 /* RemotePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = C950CC1B98977FF4F0C0895C /* RemotePopover.swift */; };
 		57EA90EBB77688D343EDD6A8 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7290A9B74959329AD4BF485C /* LaunchAtLogin.swift */; };
+		5AE401C137044090501FE206 /* TrackpadSwipes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146814848007932E63F77A24 /* TrackpadSwipes.swift */; };
 		62E58754EDC2492389D41075 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B56458A94B00FC1C6EAF0D3 /* Controls.swift */; };
 		6DE8B1F60185724A57806E35 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437DEB5E52F38D6126796C4B /* MenuBarIcon.swift */; };
 		704BB432C7ED4E88B281E06C /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947C7F5A9374B54CA64530A6 /* AppSettings.swift */; };
@@ -42,6 +43,7 @@
 		0B1D752D9195B218840BDCD4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		10E8ACEE67ADE724EDFCDAD9 /* PowerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerButton.swift; sourceTree = "<group>"; };
 		111E7281D72A8A2A7AA648EE /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		146814848007932E63F77A24 /* TrackpadSwipes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadSwipes.swift; sourceTree = "<group>"; };
 		1C585D46587F5C0B49CE768E /* GlobalShortcut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalShortcut.swift; sourceTree = "<group>"; };
 		201189B612BC49040F04E5CB /* RemoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteViewModel.swift; sourceTree = "<group>"; };
 		20DDA00246752F5F774922B4 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -159,6 +161,7 @@
 				10E8ACEE67ADE724EDFCDAD9 /* PowerButton.swift */,
 				595E4CEBB721ACB59B92757E /* RemoteContent.swift */,
 				C950CC1B98977FF4F0C0895C /* RemotePopover.swift */,
+				146814848007932E63F77A24 /* TrackpadSwipes.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -262,6 +265,7 @@
 				F3F433CD8276ADA1D799E251 /* SettingsView.swift in Sources */,
 				C80FC2E78FBF686CF8B93DCC /* StatusItemMenu.swift in Sources */,
 				21B7C5D89D842F25B31AB072 /* Theme.swift in Sources */,
+				5AE401C137044090501FE206 /* TrackpadSwipes.swift in Sources */,
 				15ACB5732F72327BCF09E56A /* UpdateController.swift in Sources */,
 				7DAFCCEA54B6453DCE153A3F /* UpdateInstaller.swift in Sources */,
 			);
@@ -366,7 +370,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.3.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -425,7 +429,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.3.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
