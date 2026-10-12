@@ -40,12 +40,21 @@ public struct Release: Sendable, Equatable {
     public let pageURL: URL
     /// Downloads attached to the release, by file name.
     public let assets: [String: URL]
+    /// The release notes (GitHub's markdown), if any.
+    public let notes: String?
 
-    public init(version: AppVersion, name: String?, pageURL: URL, assets: [String: URL] = [:]) {
+    public init(version: AppVersion, name: String?, pageURL: URL, assets: [String: URL] = [:], notes: String? = nil) {
         self.version = version
         self.name = name
         self.pageURL = pageURL
         self.assets = assets
+        self.notes = notes
+    }
+
+    /// What changed, for the update alert: the notes without the install instructions and
+    /// GitHub's bookkeeping lines. Nil when there's nothing to show.
+    public var whatsNew: String? {
+        notes.flatMap(ReleaseNotes.whatsNew(in:))
     }
 
     /// The disk image to install on this Mac: the Apple silicon build on Apple silicon if
@@ -115,6 +124,7 @@ public struct ReleaseChecker: Sendable {
             let name: String?
             let html_url: URL
             let assets: [Asset]?
+            let body: String?
         }
         struct Asset: Decodable {
             let name: String
@@ -124,6 +134,6 @@ public struct ReleaseChecker: Sendable {
         guard let version = AppVersion(payload.tag_name) else { throw CheckError.badResponse }
         guard currentVersion < version else { return .upToDate }
         let assets = Dictionary((payload.assets ?? []).map { ($0.name, $0.browser_download_url) }) { first, _ in first }
-        return .available(Release(version: version, name: payload.name, pageURL: payload.html_url, assets: assets))
+        return .available(Release(version: version, name: payload.name, pageURL: payload.html_url, assets: assets, notes: payload.body))
     }
 }

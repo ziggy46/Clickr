@@ -129,3 +129,57 @@ import Testing
         #expect(Array(parsed.keys) == ["a.dmg"])
     }
 }
+
+@Suite struct ReleaseNotesTests {
+    @Test func keepsWhatChangedAndDropsTheInstallSection() {
+        let body = """
+        ## What's Changed
+        * Playback controls by @ziggy46 in https://github.com/ziggy46/Clickr/pull/3
+        * Trackpad swiping by @some-one in https://github.com/ziggy46/Clickr/pull/4
+
+        ## New Contributors
+        * @some-one made their first contribution in https://github.com/ziggy46/Clickr/pull/4
+
+        **Full Changelog**: https://github.com/ziggy46/Clickr/compare/v0.2.1...v0.3.0
+
+        <!-- clickr:install -->
+        ### Installing
+
+        1. Download the disk image.
+        """
+        #expect(ReleaseNotes.whatsNew(in: body) == """
+        ## What's Changed
+        * Playback controls
+        * Trackpad swiping
+        """)
+    }
+
+    @Test func readsOlderReleasesWithInstallInstructionsFirst() {
+        let body = """
+        ### Installing
+
+        1. Download it.
+
+        ## What's Changed
+        * Follow the system accent color (0.2.1) by @ziggy46 in https://github.com/ziggy46/Clickr/pull/2
+
+        **Full Changelog**: https://github.com/ziggy46/Clickr/compare/v0.2.0...v0.2.1
+        """
+        #expect(ReleaseNotes.whatsNew(in: body) == "## What's Changed\n* Follow the system accent color (0.2.1)")
+    }
+
+    @Test func nothingToShow() {
+        #expect(ReleaseNotes.whatsNew(in: "") == nil)
+        #expect(ReleaseNotes.whatsNew(in: "\n<!-- clickr:install -->\n### Installing") == nil)
+    }
+
+    @Test func checkerKeepsTheBody() throws {
+        let checker = ReleaseChecker(repository: "ziggy46/Clickr", currentVersion: AppVersion("0.2.1")!)
+        let json = Data("{\"tag_name\": \"v0.3.0\", \"html_url\": \"https://github.com/ziggy46/Clickr/releases/tag/v0.3.0\", \"body\": \"## What's Changed\\n* New things\"}".utf8)
+        guard case .available(let release) = try checker.evaluate(json) else {
+            Issue.record("expected an update")
+            return
+        }
+        #expect(release.whatsNew == "## What's Changed\n* New things")
+    }
+}
