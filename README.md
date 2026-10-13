@@ -8,6 +8,10 @@
 Control your Apple TV from your Mac, just like the Remote in Control Center on iPhone.</p>
 
 <p align="center">
+  <a href="https://buymeacoffee.com/ziggy463"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="44" alt="Buy me a coffee"></a>
+</p>
+
+<p align="center">
   <img src="docs/images/remote.png" width="340" alt="Clickr's remote in the menu bar, showing the clickpad, buttons, volume and what's playing">
 </p>
 
